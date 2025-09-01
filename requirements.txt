@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+sqlalchemy
+pydantic
+google-generativeai
+python-docx
+PyPDF2
+jinja2
+aiofiles
+pytest
+httpx
