@@ -82,3 +82,6 @@ htmlcov/
 # Backup files
 *.bak
 *.backup
+
+# Version 2 Specifications (private planning document)
+version-2-specs.md
