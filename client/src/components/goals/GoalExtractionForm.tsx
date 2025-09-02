@@ -7,12 +7,14 @@ interface GoalExtractionFormProps {
   onTextExtract: (text: string) => void;
   onFileExtract: (file: File) => void;
   isLoading?: boolean;
+  shouldComplete?: boolean;
 }
 
 const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({ 
   onTextExtract, 
   onFileExtract, 
-  isLoading = false 
+  isLoading = false,
+  shouldComplete = false
 }) => {
   const [textInput, setTextInput] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -115,6 +117,7 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
       <GoalExtractionLoader 
         isVisible={isLoading} 
         onComplete={() => {}} // This will be handled by the parent
+        shouldComplete={shouldComplete}
       />
     </>
   );

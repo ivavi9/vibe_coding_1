@@ -28,6 +28,7 @@ const Goals: React.FC = () => {
   const [extractedGoals, setExtractedGoals] = useState<ExtractedGoal[]>([]);
   const [showExtractedGoals, setShowExtractedGoals] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [shouldCompleteLoader, setShouldCompleteLoader] = useState(false);
 
   useEffect(() => {
     fetchGoals();
@@ -49,6 +50,8 @@ const Goals: React.FC = () => {
 
   const handleTextExtract = async (text: string) => {
     setIsExtracting(true);
+    setShouldCompleteLoader(false);
+    
     try {
       const response = await fetch('http://localhost:8000/api/v1/goals/extract', {
         method: 'POST',
@@ -58,21 +61,33 @@ const Goals: React.FC = () => {
       
       const data = await response.json();
       if (data.success) {
-        setExtractedGoals(data.goals);
-        setShowExtractedGoals(true);
+        // Signal the loader to complete gracefully
+        setShouldCompleteLoader(true);
+        
+        // Wait for graceful completion, then show results
+        setTimeout(() => {
+          setExtractedGoals(data.goals);
+          setShowExtractedGoals(true);
+          setIsExtracting(false);
+          setShouldCompleteLoader(false);
+        }, 800); // Total graceful completion time
       } else {
         alert('No goals extracted. Please try different text.');
+        setIsExtracting(false);
+        setShouldCompleteLoader(false);
       }
     } catch (error) {
       console.error('Error extracting goals:', error);
       alert('Failed to extract goals. Please try again.');
-    } finally {
       setIsExtracting(false);
+      setShouldCompleteLoader(false);
     }
   };
 
   const handleFileExtract = async (file: File) => {
     setIsExtracting(true);
+    setShouldCompleteLoader(false);
+    
     const formData = new FormData();
     formData.append('file', file);
     formData.append('description', '');
@@ -85,16 +100,26 @@ const Goals: React.FC = () => {
       
       const data = await response.json();
       if (data.success) {
-        setExtractedGoals(data.extracted_goals);
-        setShowExtractedGoals(true);
+        // Signal the loader to complete gracefully
+        setShouldCompleteLoader(true);
+        
+        // Wait for graceful completion, then show results
+        setTimeout(() => {
+          setExtractedGoals(data.extracted_goals);
+          setShowExtractedGoals(true);
+          setIsExtracting(false);
+          setShouldCompleteLoader(false);
+        }, 800); // Total graceful completion time
       } else {
         alert('No goals extracted from document. Please try a different file.');
+        setIsExtracting(false);
+        setShouldCompleteLoader(false);
       }
     } catch (error) {
       console.error('Error uploading document:', error);
       alert('Failed to upload document. Please try again.');
-    } finally {
       setIsExtracting(false);
+      setShouldCompleteLoader(false);
     }
   };
 
@@ -164,6 +189,7 @@ const Goals: React.FC = () => {
         onTextExtract={handleTextExtract}
         onFileExtract={handleFileExtract}
         isLoading={isExtracting}
+        shouldComplete={shouldCompleteLoader}
       />
 
       {/* Extracted Goals List */}

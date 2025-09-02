@@ -4,14 +4,17 @@ import { Brain, Sparkles, Target, Zap } from 'lucide-react';
 interface GoalExtractionLoaderProps {
   isVisible: boolean;
   onComplete?: () => void;
+  shouldComplete?: boolean; // New prop to signal when to complete quickly
 }
 
 const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({ 
   isVisible, 
-  onComplete 
+  onComplete,
+  shouldComplete = false
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const steps = [
     {
@@ -40,12 +43,45 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
     }
   ];
 
+  // Handle graceful completion when results are received
+  useEffect(() => {
+    if (shouldComplete && !isCompleting) {
+      setIsCompleting(true);
+      
+      // Quickly complete the current step and move to final step
+      const quickComplete = () => {
+        setProgress(100);
+        
+        // Move to final step if not already there
+        if (currentStep < steps.length - 1) {
+          setCurrentStep(steps.length - 1);
+        }
+        
+        // Complete the final step quickly
+        setTimeout(() => {
+          setProgress(100);
+          
+          // Small delay to show completion, then call onComplete
+          setTimeout(() => {
+            onComplete?.();
+          }, 300);
+        }, 200);
+      };
+      
+      quickComplete();
+    }
+  }, [shouldComplete, isCompleting, currentStep, steps.length, onComplete]);
+
   useEffect(() => {
     if (!isVisible) {
       setCurrentStep(0);
       setProgress(0);
+      setIsCompleting(false);
       return;
     }
+
+    // Don't start normal progression if we're completing
+    if (isCompleting) return;
 
     // Simulate progress through steps
     const progressInterval = 30; // Update progress every 30ms for smoother animation
@@ -82,7 +118,7 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
       clearTimeout(stepTimer);
       clearInterval(progressTimer);
     };
-  }, [isVisible, onComplete]);
+  }, [isVisible, onComplete, isCompleting]);
 
   if (!isVisible) return null;
 
