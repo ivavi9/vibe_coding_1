@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Brain, Sparkles, Target, Zap } from 'lucide-react';
 
 interface GoalExtractionLoaderProps {
   isVisible: boolean;
   onComplete?: () => void;
-  shouldComplete?: boolean; // New prop to signal when to complete quickly
+  shouldComplete?: boolean;
 }
 
 const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({ 
@@ -15,6 +15,7 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
+  const completionRef = useRef(false);
 
   const steps = [
     {
@@ -45,11 +46,13 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
 
   // Handle graceful completion when results are received
   useEffect(() => {
-    if (shouldComplete && !isCompleting) {
+    if (shouldComplete && !completionRef.current) {
+      completionRef.current = true;
       setIsCompleting(true);
       
-      // Quickly complete the current step and move to final step
-      const quickComplete = () => {
+      // Smooth completion animation
+      const smoothComplete = () => {
+        // Quickly complete current step
         setProgress(100);
         
         // Move to final step if not already there
@@ -57,35 +60,30 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
           setCurrentStep(steps.length - 1);
         }
         
-        // Complete the final step quickly
+        // Show completion state briefly, then fade out
         setTimeout(() => {
-          setProgress(100);
-          
-          // Small delay to show completion, then call onComplete
-          setTimeout(() => {
-            onComplete?.();
-          }, 300);
-        }, 200);
+          onComplete?.();
+        }, 600);
       };
       
-      quickComplete();
+      smoothComplete();
     }
-  }, [shouldComplete, isCompleting, currentStep, steps.length, onComplete]);
+  }, [shouldComplete, currentStep, steps.length, onComplete]);
 
   useEffect(() => {
     if (!isVisible) {
       setCurrentStep(0);
       setProgress(0);
       setIsCompleting(false);
+      completionRef.current = false;
       return;
     }
 
     // Don't start normal progression if we're completing
     if (isCompleting) return;
 
-    // Simulate progress through steps
-    const progressInterval = 30; // Update progress every 30ms for smoother animation
-    
+    // Smooth, soothing progress animation
+    const progressInterval = 50; // Slower, more soothing updates
     let stepTimer: NodeJS.Timeout;
     let progressTimer: NodeJS.Timeout;
 
@@ -98,16 +96,16 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
       setCurrentStep(stepIndex);
       setProgress(0);
 
-      // Progress through current step
+      // Gentle progress through current step
       progressTimer = setInterval(() => {
         setProgress(prev => {
           if (prev >= 100) {
             clearInterval(progressTimer);
-            // Move to next step with a shorter delay
-            stepTimer = setTimeout(() => startStep(stepIndex + 1), 300);
+            // Smooth transition to next step
+            stepTimer = setTimeout(() => startStep(stepIndex + 1), 400);
             return 100;
           }
-          return prev + 3; // Slightly faster progress for smoother feel
+          return prev + 2; // Slower, more soothing progress
         });
       }, progressInterval);
     };
@@ -122,7 +120,7 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
 
   if (!isVisible) return null;
 
-  // Calculate overall progress percentage
+  // Calculate overall progress with smooth easing
   const overallProgress = Math.round(((currentStep + progress / 100) / steps.length) * 100);
 
   return (
@@ -152,21 +150,21 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
             </span>
           </div>
           
-          {/* Progress Bar */}
+          {/* Smooth Progress Bar */}
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
             <div 
-              className="h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300 ease-out"
+              className="h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${overallProgress}%` }}
             />
           </div>
           
-          {/* Subtle Step Indicator */}
+          {/* Gentle Step Indicator */}
           <div className="flex justify-center mt-2">
             <div className="flex space-x-1">
               {steps.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  className={`w-2 h-2 rounded-full transition-all duration-500 ${
                     index < currentStep 
                       ? 'bg-blue-500' 
                       : index === currentStep 
@@ -181,18 +179,18 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
 
         {/* Step Details */}
         <div className="text-center mb-6">
-          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3 ${steps[currentStep]?.color}`}>
+          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3 transition-all duration-500 ${steps[currentStep]?.color}`}>
             {(() => {
               const IconComponent = steps[currentStep]?.icon;
               return IconComponent ? <IconComponent className="w-6 h-6" /> : null;
             })()}
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 transition-all duration-300">
             {steps[currentStep]?.description}
           </p>
         </div>
 
-        {/* Fun Facts */}
+        {/* Soothing AI Insight */}
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
           <div className="flex items-center space-x-2 mb-2">
             <Sparkles className="w-4 h-4 text-blue-600" />
@@ -206,14 +204,17 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
           </p>
         </div>
 
-        {/* Loading Animation */}
+        {/* Gentle Loading Animation */}
         <div className="flex justify-center mt-6">
           <div className="flex space-x-1">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
+                style={{ 
+                  animationDelay: `${i * 0.2}s`,
+                  animationDuration: '1.5s'
+                }}
               />
             ))}
           </div>

@@ -14,7 +14,7 @@ interface Goal {
   metric_type: string;
   current_progress: number;
   target_progress: number;
-  status: string;
+  status: 'active' | 'completed' | 'paused' | 'cancelled';
 }
 
 interface ExtractedGoal {
@@ -189,22 +189,65 @@ const Goals: React.FC = () => {
   };
 
   const handleDeleteGoal = async (goalId: string) => {
-    if (!confirm('Are you sure you want to delete this goal?')) return;
-
     try {
+      // Use the existing PUT endpoint to update status to 'cancelled'
       const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}`, {
-        method: 'DELETE'
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled' })
       });
       
       if (response.ok) {
         await fetchGoals();
-        showSuccess('Goal Deleted', 'The goal has been successfully removed from your list.');
+        showSuccess('Goal Cancelled', 'The goal has been moved to cancelled goals. You can reactivate it later.');
       } else {
-        alert('Failed to delete goal. Please try again.');
+        alert('Failed to cancel goal. Please try again.');
       }
     } catch (error) {
-      console.error('Error deleting goal:', error);
-      alert('Failed to delete goal. Please try again.');
+      console.error('Error cancelling goal:', error);
+      alert('Failed to cancel goal. Please try again.');
+    }
+  };
+
+  const handleCompleteGoal = async (goalId: string) => {
+    try {
+      // Use the existing PUT endpoint to update status to 'completed'
+      const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      });
+      
+      if (response.ok) {
+        await fetchGoals();
+        showSuccess('Goal Completed', 'Congratulations! You have completed this goal.');
+      } else {
+        alert('Failed to complete goal. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error completing goal:', error);
+      alert('Failed to complete goal. Please try again.');
+    }
+  };
+
+  const handleRecoverGoal = async (goalId: string) => {
+    try {
+      // Use the existing PUT endpoint to update status back to 'active'
+      const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'active' })
+      });
+      
+      if (response.ok) {
+        await fetchGoals();
+        showSuccess('Goal Reactivated', 'The goal has been restored to your active goals.');
+      } else {
+        alert('Failed to reactivate goal. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error reactivating goal:', error);
+      alert('Failed to reactivate goal. Please try again.');
     }
   };
 
