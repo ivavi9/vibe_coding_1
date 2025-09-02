@@ -8,10 +8,10 @@ const navigationItems = [
   { path: '/analytics', label: 'Analytics', icon: BarChart3 },
 ]
 
-export function Sidebar() {
+const Sidebar = () => {
   return (
     <motion.aside 
-      className="w-64 bg-panel border-r border-border p-6"
+      className="w-64 bg-white border-r border-gray-200 p-6"
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3, delay: 0.1 }}
@@ -29,8 +29,8 @@ export function Sidebar() {
               className={({ isActive }) =>
                 `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-accent text-white'
-                    : 'text-primary-secondary hover:bg-gray-100 hover:text-primary-text'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`
               }
             >
@@ -43,3 +43,5 @@ export function Sidebar() {
     </motion.aside>
   )
 }
+
+export default Sidebar
