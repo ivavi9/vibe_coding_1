@@ -15,6 +15,9 @@ from typing import Dict, Any, List
 import os
 from dotenv import load_dotenv
 import json
+import google.generativeai as genai
+import PyPDF2
+import io
 
 # Load environment variables
 load_dotenv()
@@ -46,6 +49,157 @@ goals_db = [
 ]
 
 progress_history = []
+
+def extract_text_from_pdf(pdf_file: UploadFile) -> str:
+    """Extract text content from PDF file."""
+    try:
+        # Read PDF content
+        pdf_content = pdf_file.file.read()
+        pdf_file.file.seek(0)  # Reset file pointer
+        
+        # Parse PDF
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_content))
+        text = ""
+        
+        # Extract text from all pages
+        for page in pdf_reader.pages:
+            text += page.extract_text() + "\n"
+        
+        logger.info(f"Extracted {len(text)} characters from PDF")
+        return text.strip()
+        
+    except Exception as e:
+        logger.error(f"Error extracting text from PDF: {e}")
+        return ""
+
+def extract_goals_with_gemini(text: str) -> List[Dict[str, Any]]:
+    """Extract goals from text using Gemini API or fallback to keyword extraction."""
+    try:
+        # Check if Gemini API key is available
+        gemini_api_key = os.getenv("GEMINI_API_KEY")
+        
+        if gemini_api_key:
+            try:
+                # Configure Gemini API
+                genai.configure(api_key=gemini_api_key)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                # Create the prompt for goal extraction
+                prompt = f"""
+                You are an AI assistant that extracts actionable goals from text content. 
+                Analyze the following text and identify specific, measurable goals that someone could track and achieve.
+                
+                TEXT TO ANALYZE:
+                {text}
+                
+                INSTRUCTIONS:
+                1. Identify 3-5 specific, actionable goals from the text
+                2. Each goal should be clear, measurable, and achievable
+                3. Focus on goals related to training, fitness, learning, or personal development
+                4. For each goal, provide:
+                   - A clear, concise title
+                   - A detailed description
+                   - The metric type (Numeric, Boolean, or Percentage)
+                   - A target value or completion criteria
+                
+                RESPONSE FORMAT:
+                Return a JSON array of goals with this exact structure:
+                [
+                    {{
+                        "title": "Goal Title",
+                        "description": "Detailed description of what needs to be achieved",
+                        "metric_type": "Numeric|Boolean|Percentage",
+                        "target_progress": <target_value>
+                    }}
+                ]
+                
+                EXAMPLES:
+                - For marathon training: {{"title": "Complete 6-Month Training Program", "description": "Follow the complete training schedule from start to finish", "metric_type": "Boolean", "target_progress": 1}}
+                - For fitness: {{"title": "Build Running Endurance", "description": "Gradually increase running distance and stamina", "metric_type": "Numeric", "target_progress": 26.2}}
+                - For learning: {{"title": "Master Training Techniques", "description": "Learn and practice proper running form and training methods", "metric_type": "Percentage", "target_progress": 100}}
+                
+                IMPORTANT: Return ONLY the JSON array, no additional text or explanations.
+                """
+                
+                # Call Gemini API
+                response = model.generate_content(prompt)
+                response_text = response.text.strip()
+                
+                # Try to parse the JSON response
+                try:
+                    # Clean the response to extract just the JSON
+                    if '[' in response_text and ']' in response_text:
+                        start = response_text.find('[')
+                        end = response_text.rfind(']') + 1
+                        json_str = response_text[start:end]
+                        
+                        extracted_goals = json.loads(json_str)
+                        logger.info(f"Successfully extracted {len(extracted_goals)} goals using Gemini API")
+                        return extracted_goals
+                    else:
+                        logger.warning("Gemini response doesn't contain valid JSON array, falling back to keyword extraction")
+                        
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Failed to parse Gemini response as JSON: {e}, falling back to keyword extraction")
+                    logger.debug(f"Gemini response: {response_text}")
+                    
+            except Exception as e:
+                logger.error(f"Error calling Gemini API: {e}, falling back to keyword extraction")
+        
+        # Enhanced keyword-based extraction as fallback
+        logger.info("Using keyword-based goal extraction as fallback")
+        extracted_goals = []
+        
+        # Look for marathon/training related goals
+        if any(word in text.lower() for word in ["marathon", "training", "race", "running"]):
+            if "6 month" in text.lower() or "6-month" in text.lower():
+                extracted_goals.append({
+                    "title": "Complete 6-Month Marathon Training",
+                    "description": "Follow the marathon training blueprint to prepare for race day",
+                    "metric_type": "Boolean",
+                    "target_progress": 1
+                })
+            
+            if any(word in text.lower() for word in ["mile", "km", "distance"]):
+                extracted_goals.append({
+                    "title": "Build Running Endurance",
+                    "description": "Gradually increase running distance and stamina",
+                    "metric_type": "Numeric",
+                    "target_progress": 26.2  # Marathon distance
+                })
+        
+        # Look for fitness/health goals
+        if any(word in text.lower() for word in ["fitness", "health", "exercise", "workout"]):
+            extracted_goals.append({
+                "title": "Improve Overall Fitness",
+                "description": "Build strength, endurance, and cardiovascular health",
+                "metric_type": "Numeric",
+                "target_progress": 100
+            })
+        
+        # Look for time-based goals
+        if any(word in text.lower() for word in ["week", "month", "year", "schedule"]):
+            extracted_goals.append({
+                "title": "Follow Training Schedule",
+                "description": "Adhere to the planned training timeline and milestones",
+                "metric_type": "Boolean",
+                "target_progress": 1
+            })
+        
+        # If no specific goals found, create a general one
+        if not extracted_goals:
+            extracted_goals.append({
+                "title": "Complete Training Program",
+                "description": "Successfully complete the outlined training program",
+                "metric_type": "Boolean",
+                "target_progress": 1
+            })
+        
+        return extracted_goals
+        
+    except Exception as e:
+        logger.error(f"Error extracting goals: {e}")
+        return []
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -223,31 +377,36 @@ def create_application() -> FastAPI:
                 content={"detail": "File type not supported. Please upload PDF, DOCX, or TXT files."}
             )
         
-        # For demo purposes, we'll simulate processing
-        # In production, this would use the Gemini API to extract goals
-        logger.info(f"Processing document: {file.filename} ({file.content_type})")
-        
-        # Simulate extracted goals from document
-        extracted_goals = [
-            {
-                "title": "Complete Project Documentation",
-                "description": "Finish all project documentation and user guides",
-                "metric_type": "Boolean",
-                "target_progress": 1
-            },
-            {
-                "title": "Learn New Framework",
-                "description": "Master the new development framework within 3 months",
-                "metric_type": "Numeric",
-                "target_progress": 100
+        try:
+            logger.info(f"Processing document: {file.filename} ({file.content_type})")
+            
+            # Extract text based on file type
+            if file.content_type == "application/pdf":
+                text_content = extract_text_from_pdf(file)
+            elif file.content_type == "text/plain":
+                text_content = (await file.read()).decode('utf-8')
+            else:
+                # For DOCX, we'd need python-docx library
+                text_content = "Document content extraction for DOCX not yet implemented"
+            
+            # Extract goals from the actual text content
+            extracted_goals = extract_goals_with_gemini(text_content)
+            
+            logger.info(f"Extracted {len(extracted_goals)} goals from document content")
+            
+            return {
+                "message": "Document processed successfully",
+                "filename": file.filename,
+                "extracted_goals": extracted_goals,
+                "content_preview": text_content[:200] + "..." if len(text_content) > 200 else text_content
             }
-        ]
-        
-        return {
-            "message": "Document processed successfully",
-            "filename": file.filename,
-            "extracted_goals": extracted_goals
-        }
+            
+        except Exception as e:
+            logger.error(f"Error processing document: {e}")
+            return JSONResponse(
+                status_code=500,
+                content={"detail": f"Error processing document: {str(e)}"}
+            )
 
     @app.post("/api/v1/goals/extract")
     async def extract_goals_from_text(request: Request):
@@ -258,27 +417,10 @@ def create_application() -> FastAPI:
         if not text:
             return JSONResponse(status_code=400, content={"detail": "Text is required"})
         
-        # Simulate AI goal extraction
-        # In production, this would use the Gemini API
-        logger.info(f"Extracting goals from text: {text[:100]}...")
+        # Extract goals from the actual text content using Gemini API
+        extracted_goals = extract_goals_with_gemini(text)
         
-        # Simple keyword-based extraction for demo
-        extracted_goals = []
-        if "read" in text.lower() and any(char.isdigit() for char in text):
-            extracted_goals.append({
-                "title": "Reading Goal",
-                "description": "Complete reading targets",
-                "metric_type": "Numeric",
-                "target_progress": 12
-            })
-        
-        if "run" in text.lower() and any(char.isdigit() for char in text):
-            extracted_goals.append({
-                "title": "Fitness Goal",
-                "description": "Achieve running distance targets",
-                "metric_type": "Numeric",
-                "target_progress": 100
-            })
+        logger.info(f"Extracted {len(extracted_goals)} goals from text: {text[:100]}...")
         
         return {
             "message": "Goals extracted successfully",

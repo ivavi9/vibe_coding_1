@@ -5,3 +5,9 @@ python-multipart>=0.0.6
 
 # Data Validation
 pydantic>=2.6.0
+
+# PDF Processing
+PyPDF2>=3.0.0
+
+# Google Generative AI (Gemini)
+google-generativeai>=0.3.0

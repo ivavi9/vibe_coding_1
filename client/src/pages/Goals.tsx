@@ -46,10 +46,16 @@ export function Goals() {
         body: JSON.stringify({ text: textInput })
       })
       const data = await response.json()
-      setExtractedGoals(data.extracted_goals || [])
-      setShowExtractedGoals(true)
+      console.log('Text extraction response:', data) // Debug log
+      if (data.extracted_goals && data.extracted_goals.length > 0) {
+        setExtractedGoals(data.extracted_goals)
+        setShowExtractedGoals(true)
+      } else {
+        alert('No goals could be extracted from the text. Try being more specific about your goals.')
+      }
     } catch (error) {
       console.error('Error extracting goals:', error)
+      alert('Error extracting goals. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -68,11 +74,17 @@ export function Goals() {
         body: formData
       })
       const data = await response.json()
-      setExtractedGoals(data.extracted_goals || [])
-      setShowExtractedGoals(true)
-      setSelectedFile(null)
+      console.log('Document upload response:', data) // Debug log
+      if (data.extracted_goals && data.extracted_goals.length > 0) {
+        setExtractedGoals(data.extracted_goals)
+        setShowExtractedGoals(true)
+        setSelectedFile(null)
+      } else {
+        alert('No goals could be extracted from the document. Try a different file or format.')
+      }
     } catch (error) {
       console.error('Error uploading document:', error)
+      alert('Error processing document. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -214,13 +226,17 @@ export function Goals() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
         >
-          <h2 className="heading-2 mb-4">Extracted Goals</h2>
+          <h2 className="heading-2 mb-4">Extracted Goals ({extractedGoals.length})</h2>
           <div className="space-y-3">
             {extractedGoals.map((goal, index) => (
               <div key={index} className="p-4 bg-gray-50 rounded-lg flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium">{goal.title}</h3>
-                  <p className="text-sm text-primary-secondary">{goal.description}</p>
+                  <h3 className="font-medium">{goal.title || 'Untitled Goal'}</h3>
+                  <p className="text-sm text-primary-secondary">{goal.description || 'No description'}</p>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <span className="text-xs text-primary-secondary">Type: {goal.metric_type || 'Unknown'}</span>
+                    <span className="text-xs text-primary-secondary">Target: {goal.target_progress || 'N/A'}</span>
+                  </div>
                 </div>
                 <button
                   onClick={() => addExtractedGoal(goal)}
