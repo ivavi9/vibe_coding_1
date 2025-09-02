@@ -48,7 +48,7 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
             Turn Your Ideas Into Action
           </h2>
                            <p className="text-gray-600 max-w-md mx-auto">
-                   Share your dreams in plain English or upload your ideas captured anywhere. Clarity transforms your thoughts into clear, trackable goals that actually get done.
+                   Clarity transforms your thoughts into clear, trackable goals that actually get done.
                  </p>
         </div>
 
