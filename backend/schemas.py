@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from datetime import datetime
+from pydantic import BaseModel, ConfigDict
+from datetime import datetime, date
 from typing import Optional, List
 
 class GoalBase(BaseModel):
@@ -16,9 +16,10 @@ class GoalResponse(GoalBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    current_progress: Optional[float] = 0.0
+    total_progress_entries: Optional[int] = 0
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ProgressBase(BaseModel):
     description: Optional[str] = None
@@ -33,8 +34,27 @@ class ProgressResponse(ProgressBase):
     goal_id: int
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+class DailyProgressBase(BaseModel):
+    progress_value: float = 0.0
+    notes: Optional[str] = None
+
+class DailyProgressCreate(DailyProgressBase):
+    goal_id: int
+    date: Optional[str] = None
+
+class DailyProgressResponse(DailyProgressBase):
+    id: int
+    goal_id: int
+    date: date
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class GoalWithProgress(GoalResponse):
+    progress_entries: List[ProgressResponse] = []
+    daily_progress: List[DailyProgressResponse] = []
 
 class AnalyticsResponse(BaseModel):
     goal_id: int
@@ -43,3 +63,9 @@ class AnalyticsResponse(BaseModel):
     milestones: List[dict]
     estimated_completion: Optional[datetime]
     insights: List[str]
+
+class DailyProgressSummary(BaseModel):
+    date: date
+    total_progress: float
+    goals_updated: int
+    notes: List[str]

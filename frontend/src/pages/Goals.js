@@ -9,7 +9,9 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  TrendingUp
+  TrendingUp,
+  Star,
+  BarChart3
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -20,6 +22,12 @@ const Goals = () => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
   const [showAddGoal, setShowAddGoal] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [progressForm, setProgressForm] = useState({
+    progress_value: '',
+    notes: ''
+  });
 
   useEffect(() => {
     fetchGoals();
@@ -34,6 +42,34 @@ const Goals = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddProgress = async () => {
+    if (!selectedGoal || !progressForm.progress_value) return;
+    
+    try {
+      await axios.post('/daily-progress', {
+        goal_id: selectedGoal.id,
+        progress_value: parseFloat(progressForm.progress_value),
+        notes: progressForm.notes
+      });
+      
+      // Refresh goals to show updated progress
+      fetchGoals();
+      
+      // Reset form and close modal
+      setProgressForm({ progress_value: '', notes: '' });
+      setShowProgressModal(false);
+      setSelectedGoal(null);
+    } catch (error) {
+      console.error('Error adding progress:', error);
+    }
+  };
+
+  const openProgressModal = (goal) => {
+    setSelectedGoal(goal);
+    setProgressForm({ progress_value: '', notes: '' });
+    setShowProgressModal(true);
   };
 
   const filteredGoals = goals.filter(goal => {
@@ -57,6 +93,15 @@ const Goals = () => {
     }
   };
 
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case 'high': return <Star className="w-4 h-4 text-red-500" />;
+      case 'medium': return <Star className="w-4 h-4 text-yellow-500" />;
+      case 'low': return <Star className="w-4 h-4 text-green-500" />;
+      default: return <Star className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
   const getProgressColor = (progress) => {
     if (progress >= 80) return 'bg-green-500';
     if (progress >= 50) return 'bg-yellow-500';
@@ -67,7 +112,7 @@ const Goals = () => {
   if (loading) {
     return (
       <div className="container mx-auto px-6 py-8">
-        <div className="animate-pulse">
+        <div className="animate-pulse" data-testid="skeleton-loading">
           <div className="h-8 bg-gray-200 rounded w-1/3 mb-8"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
@@ -191,9 +236,12 @@ const Goals = () => {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 line-clamp-2 mb-2">
-                      {goal.title}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      {getPriorityIcon(goal.priority)}
+                      <h3 className="font-semibold text-gray-900 line-clamp-2">
+                        {goal.title}
+                      </h3>
+                    </div>
                     <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(goal.priority)}`}>
                       {goal.priority}
                     </span>
@@ -214,14 +262,21 @@ const Goals = () => {
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Progress</span>
-                    <span className="font-medium text-gray-900">0%</span>
+                    <span className="font-medium text-gray-900">
+                      {goal.current_progress || 0}%
+                    </span>
                   </div>
                   <div className="progress">
                     <div 
-                      className={`progress-bar ${getProgressColor(0)}`} 
-                      style={{ width: '0%' }}
+                      className={`progress-bar ${getProgressColor(goal.current_progress || 0)}`} 
+                      style={{ width: `${goal.current_progress || 0}%` }}
                     ></div>
                   </div>
+                  {goal.total_progress_entries > 0 && (
+                    <div className="text-xs text-gray-500">
+                      {goal.total_progress_entries} progress entries
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer */}
@@ -241,7 +296,10 @@ const Goals = () => {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="flex-1 btn btn-sm btn-secondary flex items-center justify-center gap-2">
+                  <button 
+                    onClick={() => openProgressModal(goal)}
+                    className="flex-1 btn btn-sm btn-secondary flex items-center justify-center gap-2"
+                  >
                     <TrendingUp className="w-4 h-4" />
                     Track Progress
                   </button>
@@ -254,6 +312,71 @@ const Goals = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Progress Modal */}
+      {showProgressModal && selectedGoal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg p-6 w-full max-w-md"
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Track Progress: {selectedGoal.title}
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Progress Value
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={progressForm.progress_value}
+                    onChange={(e) => setProgressForm(prev => ({ ...prev, progress_value: e.target.value }))}
+                    className="form-input w-20 text-center"
+                    placeholder="0"
+                  />
+                  <span className="text-gray-500">%</span>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes
+                </label>
+                <textarea
+                  value={progressForm.notes}
+                  onChange={(e) => setProgressForm(prev => ({ ...prev, notes: e.target.value }))}
+                  className="form-input form-textarea"
+                  rows="3"
+                  placeholder="What did you accomplish today?"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowProgressModal(false)}
+                className="btn btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddProgress}
+                disabled={!progressForm.progress_value}
+                className="btn btn-primary flex-1"
+              >
+                Save Progress
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

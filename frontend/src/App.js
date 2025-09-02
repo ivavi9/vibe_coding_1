@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import Goals from './pages/Goals';
 import Analytics from './pages/Analytics';
 import Upload from './pages/Upload';
+import ProgressConsole from './pages/ProgressConsole';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/goals" element={<Goals />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/upload" element={<Upload />} />
+            <Route path="/progress-console" element={<ProgressConsole />} />
           </Routes>
         </motion.main>
       </div>

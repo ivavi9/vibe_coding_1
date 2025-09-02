@@ -6,7 +6,10 @@ import {
   Calendar, 
   CheckCircle,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Star,
+  BarChart3,
+  Clock
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -40,19 +43,34 @@ const Dashboard = () => {
   const calculateStats = (goalsData) => {
     const total = goalsData.length;
     const completed = goalsData.filter(goal => {
-      // This would need to be calculated based on progress entries
-      return false; // Placeholder
+      return (goal.current_progress || 0) >= 100;
     }).length;
     const inProgress = total - completed;
     const averageProgress = total > 0 ? 
-      goalsData.reduce((sum, goal) => sum + (goal.currentProgress || 0), 0) / total : 0;
+      Math.round(goalsData.reduce((sum, goal) => sum + (goal.current_progress || 0), 0) / total) : 0;
 
     setStats({
       totalGoals: total,
       completedGoals: completed,
       inProgress: inProgress,
-      averageProgress: Math.round(averageProgress)
+      averageProgress: averageProgress
     });
+  };
+
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case 'high': return <Star className="w-4 h-4 text-red-500" />;
+      case 'medium': return <Star className="w-4 h-4 text-yellow-500" />;
+      case 'low': return <Star className="w-4 h-4 text-green-500" />;
+      default: return <Star className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
+  const getProgressColor = (progress) => {
+    if (progress >= 80) return 'text-green-600';
+    if (progress >= 50) return 'text-yellow-600';
+    if (progress >= 25) return 'text-orange-600';
+    return 'text-red-600';
   };
 
   const containerVariants = {
@@ -150,7 +168,7 @@ const Dashboard = () => {
                 <p className="text-3xl font-bold text-purple-600">{stats.averageProgress}%</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-purple-600" />
+                <BarChart3 className="w-6 h-6 text-purple-600" />
               </div>
             </div>
           </div>
@@ -172,6 +190,13 @@ const Dashboard = () => {
             >
               View All Goals
               <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              to="/progress-console"
+              className="btn btn-secondary btn-lg flex items-center gap-3"
+            >
+              <TrendingUp className="w-5 h-5" />
+              Progress Console
             </Link>
           </div>
         </motion.div>
@@ -217,9 +242,12 @@ const Dashboard = () => {
                   className="card p-6 cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900 line-clamp-2">
-                      {goal.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      {getPriorityIcon(goal.priority)}
+                      <h3 className="font-semibold text-gray-900 line-clamp-2">
+                        {goal.title}
+                      </h3>
+                    </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       goal.priority === 'high' 
                         ? 'bg-red-100 text-red-600'
@@ -235,24 +263,37 @@ const Dashboard = () => {
                     {goal.description}
                   </p>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Progress</span>
-                      <span className="font-medium text-gray-900">0%</span>
-                    </div>
-                    <div className="progress">
-                      <div className="progress-bar" style={{ width: '0%' }}></div>
-                    </div>
-                  </div>
-                  
-                  {goal.target_date && (
-                    <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-                      <Calendar className="w-4 h-4" />
-                      <span>
-                        Due {new Date(goal.target_date).toLocaleDateString()}
+                      <span className={`font-medium ${getProgressColor(goal.current_progress || 0)}`}>
+                        {goal.current_progress || 0}%
                       </span>
                     </div>
-                  )}
+                    <div className="progress">
+                      <div 
+                        className="progress-bar" 
+                        style={{ width: `${goal.current_progress || 0}%` }}
+                      ></div>
+                    </div>
+                    {goal.total_progress_entries > 0 && (
+                      <div className="text-xs text-gray-500">
+                        {goal.total_progress_entries} progress entries
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span className="capitalize">{goal.category}</span>
+                    {goal.target_date && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          Due {new Date(goal.target_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               ))}
             </div>

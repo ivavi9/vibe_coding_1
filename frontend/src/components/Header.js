@@ -7,7 +7,8 @@ import {
   Upload, 
   Home,
   Menu,
-  X
+  X,
+  TrendingUp
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -18,6 +19,7 @@ const Header = () => {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home },
     { name: 'Goals', href: '/goals', icon: Target },
+    { name: 'Progress Console', href: '/progress-console', icon: TrendingUp },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Upload', href: '/upload', icon: Upload },
   ];

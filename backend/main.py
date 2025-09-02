@@ -4,20 +4,26 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 import uvicorn
 import os
+from datetime import date, datetime
 from dotenv import load_dotenv
+from typing import List
 
 from database import get_db, engine, Base
-from models import Goal, ProgressEntry
+from models import Goal, ProgressEntry, DailyProgress
 from services.document_parser import DocumentParser
 from services.progress_tracker import ProgressTracker
-from schemas import GoalCreate, GoalResponse, ProgressCreate, ProgressResponse
+from schemas import (
+    GoalCreate, GoalResponse, ProgressCreate, ProgressResponse,
+    DailyProgressCreate, DailyProgressResponse, GoalWithProgress,
+    DailyProgressSummary
+)
 
 load_dotenv()
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Progress Tracker API", version="1.0.0")
+app = FastAPI(title="Progress Tracker API", version="2.0.0")
 
 # CORS middleware for React frontend
 app.add_middleware(
@@ -37,7 +43,7 @@ progress_tracker = ProgressTracker()
 
 @app.get("/")
 async def root():
-    return {"message": "Progress Tracker API is running"}
+    return {"message": "Progress Tracker API v2.0 is running"}
 
 @app.post("/upload-document")
 async def upload_document(
@@ -138,11 +144,67 @@ async def upload_document(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/goals", response_model=list[GoalResponse])
+@app.get("/goals", response_model=List[GoalResponse])
 async def get_goals(db: Session = Depends(get_db)):
-    """Get all goals"""
+    """Get all goals with progress information"""
     goals = db.query(Goal).all()
-    return goals
+    
+    goals_response = []
+    for goal in goals:
+        # Calculate current progress from daily progress entries
+        daily_progress = db.query(DailyProgress).filter(
+            DailyProgress.goal_id == goal.id
+        ).all()
+        
+        current_progress = sum(dp.progress_value for dp in daily_progress)
+        total_entries = len(daily_progress)
+        
+        goals_response.append(GoalResponse(
+            id=goal.id,
+            title=goal.title,
+            description=goal.description,
+            target_date=goal.target_date,
+            priority=goal.priority,
+            category=goal.category,
+            created_at=goal.created_at,
+            updated_at=goal.updated_at,
+            current_progress=current_progress,
+            total_progress_entries=total_entries
+        ))
+    
+    return goals_response
+
+@app.get("/goals/{goal_id}", response_model=GoalWithProgress)
+async def get_goal(goal_id: int, db: Session = Depends(get_db)):
+    """Get a specific goal with all its progress information"""
+    goal = db.query(Goal).filter(Goal.id == goal_id).first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    progress_entries = db.query(ProgressEntry).filter(
+        ProgressEntry.goal_id == goal_id
+    ).order_by(ProgressEntry.created_at.desc()).all()
+    
+    daily_progress = db.query(DailyProgress).filter(
+        DailyProgress.goal_id == goal_id
+    ).order_by(DailyProgress.date.desc()).all()
+    
+    current_progress = sum(dp.progress_value for dp in daily_progress)
+    
+    return GoalWithProgress(
+        id=goal.id,
+        title=goal.title,
+        description=goal.description,
+        target_date=goal.target_date,
+        priority=goal.priority,
+        category=goal.category,
+        created_at=goal.created_at,
+        updated_at=goal.updated_at,
+        current_progress=current_progress,
+        total_progress_entries=len(daily_progress),
+        progress_entries=progress_entries,
+        daily_progress=daily_progress
+    )
 
 @app.post("/progress", response_model=ProgressResponse)
 async def add_progress(
@@ -164,13 +226,138 @@ async def add_progress(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/progress/{goal_id}", response_model=list[ProgressResponse])
+@app.post("/daily-progress", response_model=DailyProgressResponse)
+async def add_daily_progress(
+    progress_data: DailyProgressCreate,
+    db: Session = Depends(get_db)
+):
+    """Add daily progress for a goal"""
+    try:
+        # Convert date string to date object if provided
+        target_date = None
+        if progress_data.date:
+            try:
+                target_date = datetime.strptime(progress_data.date, "%Y-%m-%d").date()
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+        else:
+            target_date = date.today()
+        
+        # Check if progress already exists for this goal and date
+        existing_progress = db.query(DailyProgress).filter(
+            DailyProgress.goal_id == progress_data.goal_id,
+            DailyProgress.date == target_date
+        ).first()
+        
+        if existing_progress:
+            # Update existing progress
+            existing_progress.progress_value = progress_data.progress_value
+            existing_progress.notes = progress_data.notes
+            db.commit()
+            db.refresh(existing_progress)
+            return existing_progress
+        else:
+            # Create new progress
+            progress = DailyProgress(
+                goal_id=progress_data.goal_id,
+                date=target_date,
+                progress_value=progress_data.progress_value,
+                notes=progress_data.notes
+            )
+            db.add(progress)
+            db.commit()
+            db.refresh(progress)
+            return progress
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/daily-progress-bulk")
+async def add_daily_progress_bulk(
+    progress_data: List[DailyProgressCreate],
+    db: Session = Depends(get_db)
+):
+    """Add daily progress for multiple goals at once"""
+    try:
+        results = []
+        for progress in progress_data:
+            # Convert date string to date object if provided
+            target_date = None
+            if progress.date:
+                try:
+                    target_date = datetime.strptime(progress.date, "%Y-%m-%d").date()
+                except ValueError:
+                    raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+            else:
+                target_date = date.today()
+            
+            # Check if progress already exists for this goal and date
+            existing_progress = db.query(DailyProgress).filter(
+                DailyProgress.goal_id == progress.goal_id,
+                DailyProgress.date == target_date
+            ).first()
+            
+            if existing_progress:
+                # Update existing progress
+                existing_progress.progress_value = progress.progress_value
+                existing_progress.notes = progress.notes
+                results.append(existing_progress)
+            else:
+                # Create new progress
+                new_progress = DailyProgress(
+                    goal_id=progress.goal_id,
+                    date=target_date,
+                    progress_value=progress.progress_value,
+                    notes=progress.notes
+                )
+                db.add(new_progress)
+                results.append(new_progress)
+        
+        db.commit()
+        return {"message": f"Successfully updated {len(results)} progress entries"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/progress/{goal_id}", response_model=List[ProgressResponse])
 async def get_progress(goal_id: int, db: Session = Depends(get_db)):
     """Get progress entries for a specific goal"""
     progress_entries = db.query(ProgressEntry).filter(
         ProgressEntry.goal_id == goal_id
     ).order_by(ProgressEntry.created_at.desc()).all()
     return progress_entries
+
+@app.get("/daily-progress/{goal_id}", response_model=List[DailyProgressResponse])
+async def get_daily_progress(goal_id: int, db: Session = Depends(get_db)):
+    """Get daily progress entries for a specific goal"""
+    progress_entries = db.query(DailyProgress).filter(
+        DailyProgress.goal_id == goal_id
+    ).order_by(DailyProgress.date.desc()).all()
+    return progress_entries
+
+@app.get("/daily-progress-summary/{date}")
+async def get_daily_progress_summary(
+    date: str,
+    db: Session = Depends(get_db)
+):
+    """Get summary of all progress for a specific date"""
+    try:
+        target_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    daily_progress = db.query(DailyProgress).filter(
+        DailyProgress.date == target_date
+    ).all()
+    
+    total_progress = sum(dp.progress_value for dp in daily_progress)
+    goals_updated = len(daily_progress)
+    notes = [dp.notes for dp in daily_progress if dp.notes]
+    
+    return DailyProgressSummary(
+        date=target_date,
+        total_progress=total_progress,
+        goals_updated=goals_updated,
+        notes=notes
+    )
 
 @app.get("/analytics/{goal_id}")
 async def get_analytics(goal_id: int, db: Session = Depends(get_db)):

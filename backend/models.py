@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -17,6 +17,7 @@ class Goal(Base):
     
     # Relationship with progress entries
     progress_entries = relationship("ProgressEntry", back_populates="goal")
+    daily_progress = relationship("DailyProgress", back_populates="goal")
 
 class ProgressEntry(Base):
     __tablename__ = "progress_entries"
@@ -30,3 +31,16 @@ class ProgressEntry(Base):
     
     # Relationship with goal
     goal = relationship("Goal", back_populates="progress_entries")
+
+class DailyProgress(Base):
+    __tablename__ = "daily_progress"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    goal_id = Column(Integer, ForeignKey("goals.id"), nullable=False)
+    date = Column(Date, nullable=False, default=func.current_date())
+    progress_value = Column(Float, default=0.0)  # Progress for this specific day
+    notes = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationship with goal
+    goal = relationship("Goal", back_populates="daily_progress")
