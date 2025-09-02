@@ -1,49 +1,48 @@
-# Version 3.0 - Progress Tracker Manifest
+Project Bible: The 'Clarity' ApplicationVersion 1.0 - Single Source of Truth1. Core Philosophy & Guiding PrinciplesMission: To create "Clarity," an AI-native personal achievement partner that eliminates the friction between ambition and action.Core Principles:Intelligent Automation: The application must proactively assist the user. The primary mode of interaction is through natural language, with the AI handling structuring, classification, and data entry. Manual overrides exist as a fallback, not the primary path.Minimalist Elegance: Every pixel and animation must serve a purpose. The design, inspired by Apple's human interface guidelines, prioritizes focus, clarity, and calmness. The UI must be an uncluttered sanctuary for the user's goals.Seamless Flow: The user experience must be fluid and intuitive. Transitions between states should be smooth, feedback immediate, and cognitive load minimal. The user should never feel lost or confused.Robust & Reliable: The application must be performant, secure, and thoroughly tested. Data integrity is paramount.2. Detailed Features & User Journeys2.1. Journey: Onboarding & First Goal CreationUser Signs Up/Logs In: A simple, centered form for email/password authentication.Welcome Screen: A single, focused screen that prompts the user to add their first goals via text input. The file upload option is also present but secondary.User Inputs Text: User pastes a block of text (e.g., from their notes app).AI Processing:A loading state is initiated on the frontend (e.g., the "Create Goals" button shows a subtle pulsing animation).The backend receives the text, validates its length, and sends it to the Gemini 1.5 API using the Goal Extraction Prompt (v1.1).Error Handling: If the Gemini API call fails, the backend returns a 502 Bad Gateway error. The frontend displays a non-intrusive toast notification: "Error: Could not process goals. Please try again."Goal Approval UI:The frontend receives a list of suggested goal objects.A new view is presented, listing each suggested goal in a card format. Each card displays the title, description, and icons representing the metric_type and target_progress.For each card, the user has three explicit actions:Approve: A primary action button.Edit: Opens a modal allowing the user to modify all suggested properties before approval.Discard: An 'X' icon to remove the suggestion.A master "Approve All" button is present.Activation: Once approved, the goals are persisted to the database via a POST /goals request and the user is navigated to their main dashboard.2.2. Journey: Daily Progress UpdateUser Navigates to Dashboard: The main view displays a prominent text input field with the placeholder: "What progress did you make today?"User Enters Progress Text: User types a natural language update (e.g., "I ran 5km and finished the first 2 chapters of 'Atomic Habits'").AI Matching:The frontend sends the text update and the full list of active goals (including their UUIDs) to the POST /goals/track-progress endpoint.The backend uses the Progress Tracking Prompt (v1.1) with Gemini 1.5 to match the text to one or more goals and extract the new progress values. The prompt must be engineered to handle multiple updates in a single input.The backend updates the relevant goal(s) in the database. A history of progress updates (value, timestamp) must be stored for each goal.UI Feedback:The backend responds with the updated goal objects.The frontend provides immediate visual feedback:A toast notification appears: "Progress updated for 'Run 100km' and 'Read 12 books'."The corresponding progress bars and charts on the dashboard animate smoothly to their new state over 300ms.Disambiguation Flow: If Gemini is unable to confidently match the update to a single goal, the API should return a list of potential matches. The UI must then present a simple modal: "Your update might apply to multiple goals. Please select the correct one:" followed by a list of choices.2.3. Journey: Manual Goal ManagementEditing a Goal:On the dashboard, each goal card has an "Edit" icon.Clicking it opens a modal pre-filled with the goal's current data (title, description, target_date, etc.).The user can modify the data and save, triggering a PUT /goals/{goal_id} request.Deleting a Goal:Each goal card has a "Delete" icon.Clicking it opens a confirmation modal: "Are you sure you want to delete the goal: '{goal_title}'? This action cannot be undone."Confirming triggers a DELETE /goals/{goal_id} request. The goal is soft-deleted in the database for potential recovery features later (the status is set to archived).3. Data Models & Database Schema (PostgreSQL)users table:id (UUID, Primary Key)email (VARCHAR, UNIQUE, NOT NULL)password_hash (VARCHAR, NOT NULL)created_at (TIMESTAMPZ, NOT NULL)goals table:id (UUID, Primary Key)user_id (UUID, Foreign Key to users.id)title (VARCHAR, NOT NULL)description (TEXT)target_date (DATE)metric_type (ENUM('Percentage', 'Numeric', 'Checklist'), NOT NULL)current_progress (INTEGER, NOT NULL, DEFAULT 0)target_progress (INTEGER, NOT NULL, DEFAULT 100)status (ENUM('active', 'completed', 'archived'), NOT NULL, DEFAULT 'active')created_at (TIMESTAMPZ, NOT NULL)updated_at (TIMESTAMPZ, NOT NULL)sub_tasks table (for 'Checklist' goals):id (UUID, Primary Key)goal_id (UUID, Foreign Key to goals.id)title (VARCHAR, NOT NULL)is_completed (BOOLEAN, NOT NULL, DEFAULT FALSE)progress_history table:id (UUID, Primary Key)goal_id (UUID, Foreign Key to goals.id)value (INTEGER, NOT NULL)notes (TEXT)created_at (TIMESTAMPZ, NOT NULL)4. UI/UX Design System SpecificationGrid & Spacing: Use a 4px grid system. All padding, margins, and gaps must be multiples of 4 (e.g., p-4, m-8, gap-2).Color Palette:Background: bg-slate-50 (#F8FAFC)Panels/Cards: bg-white (#FFFFFF) with a subtle border-slate-200.Primary Text: text-slate-900 (#0F172A)Secondary Text: text-slate-500 (#64748B)Accent Color: bg-blue-500 (#3B82F6) for buttons, links, and active states.Typography (Inter Font):H1 (Page Title): 48px, BoldH2 (Section Title): 32px, Semi-BoldBody: 16px, RegularSmall/Caption: 14px, RegularAnimations (Framer Motion):Default Transition: ease: "easeInOut", duration: 0.3.Page Transitions: Fade in/out.List Item Entrance: Staggered fade-in from the bottom.Accessibility: Must achieve WCAG 2.1 AA compliance. All interactive elements must have clear focus states, and all images/icons must have appropriate aria-labels.5. Technical Architecture & Contracts5.1. Frontend (React)Framework: Vite with TypeScript.Form Management: react-hook-form with zod for schema validation.Custom Hooks:useGoals(): Manages all state related to fetching, creating, updating, and deleting goals via TanStack Query.useAuth(): Manages user authentication state.useGemini(): A dedicated hook for interacting with the AI-related backend services, handling loading and error states.Directory Structure:/src/components/ui: Atomic, reusable components (Button.tsx, Input.tsx)./src/features/goals: All components and logic related to goal management./src/lib: Utilities (e.g., date formatting) and Zod schemas./src/hooks: Custom hooks./src/services: API client (axios instance) and request definitions./src/pages: Top-level page components.5.2. Backend (Python)Framework: FastAPI with Pydantic for strict data validation.Authentication: JWT with short-lived access tokens (15 mins) and long-lived refresh tokens (7 days) stored in secure, httpOnly cookies.Error Handling: A global exception handler that catches all errors and returns a standardized JSON error response: { "detail": "error message" }.Logging: Use a structured logger. All API requests and errors must be logged.Containerization: The entire application (backend, frontend, DB) must be containerized using Docker and orchestrated with Docker Compose for consistent development and deployment environments.5.3. Gemini API Prompts (v1.1)5.3.1. Goal Extraction PromptSYSTEM: You are a precision-driven productivity bot. Analyze the user's text to extract actionable goals. Respond ONLY with a valid JSON array. Each object in the array represents one goal and MUST conform to this schema:
+{
+  "title": "string (concise, action-oriented)",
+  "description": "string (brief, optional)",
+  "metric_type": "string (must be one of: 'Percentage', 'Numeric', 'Checklist')",
+  "target_progress": "integer (e.g., 100 for Percentage, or a specific count for Numeric)"
+}
+If no actionable goals are found, return an empty array [].
 
-## Project Overview
-This document outlines the specifications and requirements for Version 3.0 of the Progress Tracker application.
+EXAMPLE 1:
+USER: "I need to read 12 books this year and also finish my certification exam by June. I should also run 100km."
+YOUR RESPONSE:
+[
+  {"title": "Read 12 books", "description": "Read 12 books this year.", "metric_type": "Numeric", "target_progress": 12},
+  {"title": "Finish certification exam", "description": "Finish by June.", "metric_type": "Percentage", "target_progress": 100},
+  {"title": "Run 100km", "description": "", "metric_type": "Numeric", "target_progress": 100}
+]
 
-## Current Status
-🚀 **IN DEVELOPMENT** - Starting fresh with clean architecture
+USER'S TEXT:
+{user_text_input}
 
-## Version 3 Goals
-- [ ] **Complete UI/UX Redesign** - Apple-like, intuitive interface
-- [ ] **Fix All Button Functionality** - Ensure Track Progress, Edit, Delete work properly
-- [ ] **Simplify User Experience** - Reduce clutter, improve navigation
-- [ ] **Performance Optimization** - Faster loading, better responsiveness
+5.3.2. Progress Tracking PromptSYSTEM: You are a precision-driven progress tracking bot. Analyze the user's update text and match it to the provided list of goals. Respond ONLY with a valid JSON array. Each object in the array represents a detected progress update and MUST conform to this schema:
+{
+  "goal_id": "string (the UUID of the matching goal)",
+  "new_progress_value": "integer (the extracted absolute progress value, not an increment)"
+}
+If the update is ambiguous or cannot be matched, return an empty array [].
 
-## Google Gemini Prompt
-**Add your Google Gemini prompt here:**
+EXAMPLE 1:
+USER'S GOALS:
+[
+  {"id": "a1b2-c3d4", "title": "Read 12 books"},
+  {"id": "e5f6-g7h8", "title": "Run 100km"}
+]
+USER'S UPDATE: "I finished my third book today and ran 5km."
+YOUR RESPONSE:
+[
+  {"goal_id": "a1b2-c3d4", "new_progress_value": 3},
+  {"goal_id": "e5f6-g7h8", "new_progress_value": 5}
+]
 
-```
-[YOUR PROMPT GOES HERE]
-```
+USER'S GOALS:
+{list_of_user_goals_with_ids_and_titles}
 
-## Technical Requirements
-- **Backend**: FastAPI, SQLAlchemy, SQLite
-- **Frontend**: React, Framer Motion, Tailwind CSS
-- **Design**: Apple-like UI/UX, "3 clicks or less" rule
-- **Performance**: Fast, responsive, intuitive
+USER'S UPDATE:
+{user_progress_text}
 
-## Features to Implement
-- [ ] Clean, minimalist goal cards
-- [ ] Working progress tracking
-- [ ] Intuitive goal editing
-- [ ] Smooth animations and transitions
-- [ ] Mobile-responsive design
-
-## Development Phases
-1. **Phase 1**: Clean up unnecessary files
-2. **Phase 2**: Implement Gemini prompt requirements
-3. **Phase 3**: Test and refine
-4. **Phase 4**: Deploy and document
-
-## Notes
-- Starting fresh to avoid technical debt
-- Focus on user experience and functionality
-- Maintain core progress tracking features
-- Build on lessons learned from version-2
-
----
-*Last Updated: [Current Date]*
-*Status: Planning Phase*
+6. Rigorous Testing & Deployment Strategy6.1. Backend Testing (pytest)Target Coverage: >90%.Unit Tests: Must mock all external dependencies (database, Gemini API). Test all business logic in /core and /services.Integration Tests: Must use a live test database. Test API endpoint logic, data persistence, and authentication flows. Specifically test edge cases like invalid JWTs, incorrect request bodies (testing Pydantic validation), and race conditions.6.2. Frontend TestingComponent Tests (Vitest & React Testing Library): Test every UI component for rendering, props handling, and event emission.Integration Tests (Vitest & RTL): Test feature-level logic. Mock all API requests with msw. Test complex state interactions, form submissions, and error handling flows.E2E Tests (Playwright):Critical Path Tests: Write E2E tests for the user journeys defined in Section 2.These tests run against a staging environment with a seeded database.6.3. CI/CD & DeploymentProvider: GitHub Actions.CI Pipeline: Triggered on every Pull Request.Install dependencies for frontend and backend.Run linters and formatters.Run all backend unit and integration tests.Run all frontend component and integration tests.Build frontend and backend Docker images.A PR cannot be merged unless all checks pass.CD Pipeline: Triggered on merge to the main branch.Run all steps from the CI pipeline.Push Docker images to a container registry (e.g., Docker Hub, AWS ECR).Deploy the new images to the production environment (e.g., AWS Fargate, DigitalOcean App Platform).Run database migrations (Alembic).7. DeliverablesA link to the single GitHub repository containing the /client and /server directories.A README.md file providing a project overview and a link to this manifest.A CONTRIBUTING.md outlining the development process, branch strategy (GitFlow), and coding standards.A docker-compose.yml file for one-command local environment setup.Hosted, auto-generated API documentation (from FastAPI's ReDoc/Swagger).

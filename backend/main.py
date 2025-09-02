@@ -1,432 +1,205 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 import uvicorn
 import os
 from datetime import date, datetime
 from dotenv import load_dotenv
 from typing import List
+import google.generativeai as genai
 
 from database import get_db, engine, Base
-from models import Goal, ProgressEntry, DailyProgress
-from services.document_parser import DocumentParser
-from services.progress_tracker import ProgressTracker
+from models import Goal, ProgressHistory, SubTask, MetricType, GoalStatus
 from schemas import (
-    GoalCreate, GoalResponse, ProgressCreate, ProgressResponse,
-    DailyProgressCreate, DailyProgressResponse, GoalWithProgress,
-    DailyProgressSummary, GoalUpdate
+    GoalCreate, GoalResponse, GoalUpdate, ProgressHistoryCreate, 
+    ProgressHistoryResponse, SubTaskCreate, SubTaskResponse, GoalWithDetails,
+    ProgressTrackingRequest, ProgressTrackingResponse, GoalExtractionRequest,
+    GoalExtractionResponse
 )
 
 load_dotenv()
 
+# Configure Gemini API
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel('gemini-1.5-flash')
+
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Progress Tracker API", version="2.0.0")
+app = FastAPI(title="Clarity - Progress Tracker API", version="3.0.0")
 
 # CORS middleware for React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount static files (commented out for now)
-# app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Initialize services
-document_parser = DocumentParser()
-progress_tracker = ProgressTracker()
-
 @app.get("/")
 async def root():
-    return {"message": "Progress Tracker API v2.0 is running"}
-
-@app.post("/upload-document")
-async def upload_document(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
-):
-    """Upload and parse a document to extract goals"""
-    try:
-        # Save uploaded file temporarily
-        file_path = f"temp_{file.filename}"
-        with open(file_path, "wb") as buffer:
-            content = await file.read()
-            buffer.write(content)
-        
-        # Parse document to extract goals
-        goals = await document_parser.parse_document(file_path)
-        
-        # Save goals to database
-        goal_objects = []
-        for goal_data in goals:
-            # Parse target_date if it's a string
-            target_date = goal_data.get("target_date")
-            if target_date and isinstance(target_date, str):
-                try:
-                    from datetime import datetime
-                    import re
-                    
-                    # Try to parse common date formats
-                    target_date_lower = target_date.lower()
-                    
-                    # Month + Year patterns
-                    if "february" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 2, 1)
-                    elif "march" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 3, 1)
-                    elif "april" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 4, 1)
-                    elif "may" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 5, 1)
-                    elif "june" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 6, 1)
-                    elif "july" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 7, 1)
-                    elif "august" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 8, 1)
-                    elif "september" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 9, 1)
-                    elif "october" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 10, 1)
-                    elif "november" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 11, 1)
-                    elif "december" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 12, 1)
-                    elif "january" in target_date_lower and "2026" in target_date:
-                        target_date = datetime(2026, 1, 1)
-                    # Year only patterns
-                    elif "2026" in target_date:
-                        target_date = datetime(2026, 12, 31)  # End of year
-                    elif "2025" in target_date:
-                        target_date = datetime(2025, 12, 31)  # End of year
-                    elif "2024" in target_date:
-                        target_date = datetime(2024, 12, 31)  # End of year
-                    else:
-                        target_date = None
-                except:
-                    target_date = None
-            
-            goal = Goal(
-                title=goal_data["title"],
-                description=goal_data["description"],
-                target_date=target_date,
-                priority=goal_data.get("priority", "medium"),
-                category=goal_data.get("category", "general")
-            )
-            db.add(goal)
-            goal_objects.append(goal)
-        
-        db.commit()
-        
-        # Convert SQLAlchemy objects to dictionaries for JSON response
-        goals_response = []
-        for goal in goal_objects:
-            goals_response.append({
-                "id": goal.id,
-                "title": goal.title,
-                "description": goal.description,
-                "target_date": goal.target_date.isoformat() if goal.target_date else None,
-                "priority": goal.priority,
-                "category": goal.category,
-                "created_at": goal.created_at.isoformat() if goal.created_at else None
-            })
-        
-        # Clean up temp file
-        os.remove(file_path)
-        
-        return {"goals": goals_response, "message": f"Successfully extracted {len(goals)} goals"}
-    
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    return {"message": "Clarity - Progress Tracker API v3.0 is running"}
 
 @app.get("/goals", response_model=List[GoalResponse])
 async def get_goals(db: Session = Depends(get_db)):
-    """Get all goals with progress information"""
-    goals = db.query(Goal).all()
-    
-    goals_response = []
-    for goal in goals:
-        # Calculate current progress from daily progress entries
-        daily_progress = db.query(DailyProgress).filter(
-            DailyProgress.goal_id == goal.id
-        ).all()
-        
-        current_progress = sum(dp.progress_value for dp in daily_progress)
-        total_entries = len(daily_progress)
-        
-        goals_response.append(GoalResponse(
-            id=goal.id,
-            title=goal.title,
-            description=goal.description,
-            target_date=goal.target_date,
-            priority=goal.priority,
-            category=goal.category,
-            created_at=goal.created_at,
-            updated_at=goal.updated_at,
-            current_progress=current_progress,
-            total_progress_entries=total_entries
-        ))
-    
-    return goals_response
+    """Get all active goals"""
+    goals = db.query(Goal).filter(Goal.status == GoalStatus.ACTIVE).all()
+    return goals
 
-@app.get("/goals/{goal_id}", response_model=GoalWithProgress)
+@app.get("/goals/{goal_id}", response_model=GoalWithDetails)
 async def get_goal(goal_id: int, db: Session = Depends(get_db)):
-    """Get a specific goal with all its progress"""
+    """Get a specific goal with its progress history and sub-tasks"""
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
-    
-    # Get all daily progress for this goal
-    daily_progress = db.query(DailyProgress).filter(DailyProgress.goal_id == goal_id).all()
-    
-    # Calculate current progress
-    current_progress = sum(dp.progress_value for dp in daily_progress)
-    total_progress_entries = len(daily_progress)
-    
-    return GoalWithProgress(
-        id=goal.id,
-        title=goal.title,
-        description=goal.description,
-        target_date=goal.target_date,
-        priority=goal.priority,
-        category=goal.category,
-        created_at=goal.created_at,
-        updated_at=goal.updated_at,
-        current_progress=current_progress,
-        total_progress_entries=total_progress_entries,
-        progress_entries=[],
-        daily_progress=daily_progress
-    )
+    return goal
+
+@app.post("/goals", response_model=GoalResponse)
+async def create_goal(goal: GoalCreate, db: Session = Depends(get_db)):
+    """Create a new goal"""
+    db_goal = Goal(**goal.dict())
+    db.add(db_goal)
+    db.commit()
+    db.refresh(db_goal)
+    return db_goal
 
 @app.put("/goals/{goal_id}", response_model=GoalResponse)
-async def update_goal(
-    goal_id: int, 
-    goal_update: GoalUpdate, 
-    db: Session = Depends(get_db)
-):
-    """Update a goal"""
+async def update_goal(goal_id: int, goal_update: GoalUpdate, db: Session = Depends(get_db)):
+    """Update an existing goal"""
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
     
-    # Update goal fields
     for field, value in goal_update.dict(exclude_unset=True).items():
         setattr(goal, field, value)
     
     goal.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(goal)
-    
-    return GoalResponse(
-        id=goal.id,
-        title=goal.title,
-        description=goal.description,
-        target_date=goal.target_date,
-        priority=goal.priority,
-        category=goal.category,
-        created_at=goal.created_at,
-        updated_at=goal.updated_at
-    )
+    return goal
 
 @app.delete("/goals/{goal_id}")
 async def delete_goal(goal_id: int, db: Session = Depends(get_db)):
-    """Delete a goal and all its progress"""
+    """Soft delete a goal (set status to archived)"""
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
     
-    # Delete associated daily progress first
-    db.query(DailyProgress).filter(DailyProgress.goal_id == goal_id).delete()
-    
-    # Delete the goal
-    db.delete(goal)
+    goal.status = GoalStatus.ARCHIVED
+    goal.updated_at = datetime.utcnow()
     db.commit()
-    
-    return {"message": "Goal deleted successfully"}
+    return {"message": "Goal archived successfully"}
 
-@app.delete("/goals")
-async def clear_all_goals(db: Session = Depends(get_db)):
-    """Clear all goals and progress"""
-    # Delete all daily progress
-    db.query(DailyProgress).delete()
-    
-    # Delete all goals
-    db.query(Goal).delete()
-    db.commit()
-    
-    return {"message": "All goals cleared successfully"}
-
-@app.post("/progress", response_model=ProgressResponse)
-async def add_progress(
-    progress_data: ProgressCreate,
-    db: Session = Depends(get_db)
-):
-    """Add progress entry for a goal"""
+@app.post("/goals/extract", response_model=GoalExtractionResponse)
+async def extract_goals(request: GoalExtractionRequest, db: Session = Depends(get_db)):
+    """Extract goals from text using Gemini AI"""
     try:
-        progress = ProgressEntry(
-            goal_id=progress_data.goal_id,
-            description=progress_data.description,
-            completion_percentage=progress_data.completion_percentage,
-            notes=progress_data.notes
+        # Use the new v1.1 Goal Extraction Prompt
+        prompt = f"""
+        SYSTEM: You are a precision-driven productivity bot. Analyze the user's text to extract actionable goals. Respond ONLY with a valid JSON array. Each object in the array represents one goal and MUST conform to this schema:
+        {{
+          "title": "string (concise, action-oriented)",
+          "description": "string (brief, optional)",
+          "metric_type": "string (must be one of: 'Percentage', 'Numeric', 'Checklist')",
+          "target_progress": "integer (e.g., 100 for Percentage, or a specific count for Numeric)"
+        }}
+        If no actionable goals are found, return an empty array [].
+
+        USER'S TEXT:
+        {request.text}
+        """
+        
+        response = model.generate_content(prompt)
+        # Parse the response and extract goals
+        # This is a simplified version - you'll need to parse the JSON response
+        goals = []  # Placeholder for parsed goals
+        return GoalExtractionResponse(goals=goals)
+        
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Could not process goals: {str(e)}")
+
+@app.post("/goals/track-progress", response_model=ProgressTrackingResponse)
+async def track_progress(request: ProgressTrackingRequest, db: Session = Depends(get_db)):
+    """Track progress using natural language with Gemini AI"""
+    try:
+        # Get all goals for context
+        goals = db.query(Goal).filter(Goal.id.in_(request.goal_ids)).all()
+        
+        # Use the new v1.1 Progress Tracking Prompt
+        goals_context = [{"id": str(g.id), "title": g.title} for g in goals]
+        prompt = f"""
+        SYSTEM: You are a precision-driven progress tracking bot. Analyze the user's update text and match it to the provided list of goals. Respond ONLY with a valid JSON array. Each object in the array represents a detected progress update and MUST conform to this schema:
+        {{
+          "goal_id": "string (the UUID of the matching goal)",
+          "new_progress_value": "integer (the extracted absolute progress value, not an increment)"
+        }}
+        If the update is ambiguous or cannot be matched, return an empty array [].
+
+        USER'S GOALS:
+        {goals_context}
+
+        USER'S UPDATE:
+        {request.progress_text}
+        """
+        
+        response = model.generate_content(prompt)
+        # Parse the response and update goals
+        # This is a simplified version - you'll need to parse the JSON response
+        
+        updated_goals = []
+        for goal in goals:
+            # Update progress logic here
+            pass
+            
+        return ProgressTrackingResponse(
+            updated_goals=updated_goals,
+            message=f"Progress updated for {len(updated_goals)} goals"
         )
-        db.add(progress)
-        db.commit()
-        db.refresh(progress)
-        return progress
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@app.post("/daily-progress", response_model=DailyProgressResponse)
-async def add_daily_progress(
-    progress_data: DailyProgressCreate,
-    db: Session = Depends(get_db)
-):
-    """Add daily progress for a goal"""
-    try:
-        # Convert date string to date object if provided
-        target_date = None
-        if progress_data.date:
-            try:
-                target_date = datetime.strptime(progress_data.date, "%Y-%m-%d").date()
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
-        else:
-            target_date = date.today()
         
-        # Check if progress already exists for this goal and date
-        existing_progress = db.query(DailyProgress).filter(
-            DailyProgress.goal_id == progress_data.goal_id,
-            DailyProgress.date == target_date
-        ).first()
-        
-        if existing_progress:
-            # Update existing progress
-            existing_progress.progress_value = progress_data.progress_value
-            existing_progress.notes = progress_data.notes
-            db.commit()
-            db.refresh(existing_progress)
-            return existing_progress
-        else:
-            # Create new progress
-            progress = DailyProgress(
-                goal_id=progress_data.goal_id,
-                date=target_date,
-                progress_value=progress_data.progress_value,
-                notes=progress_data.notes
-            )
-            db.add(progress)
-            db.commit()
-            db.refresh(progress)
-            return progress
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=502, detail=f"Could not process progress update: {str(e)}")
 
-@app.post("/daily-progress-bulk")
-async def add_daily_progress_bulk(
-    progress_data: List[DailyProgressCreate],
-    db: Session = Depends(get_db)
-):
-    """Add daily progress for multiple goals at once"""
-    try:
-        results = []
-        for progress in progress_data:
-            # Convert date string to date object if provided
-            target_date = None
-            if progress.date:
-                try:
-                    target_date = datetime.strptime(progress.date, "%Y-%m-%d").date()
-                except ValueError:
-                    raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
-            else:
-                target_date = date.today()
-            
-            # Check if progress already exists for this goal and date
-            existing_progress = db.query(DailyProgress).filter(
-                DailyProgress.goal_id == progress.goal_id,
-                DailyProgress.date == target_date
-            ).first()
-            
-            if existing_progress:
-                # Update existing progress
-                existing_progress.progress_value = progress.progress_value
-                existing_progress.notes = progress.notes
-                results.append(existing_progress)
-            else:
-                # Create new progress
-                new_progress = DailyProgress(
-                    goal_id=progress.goal_id,
-                    date=target_date,
-                    progress_value=progress.progress_value,
-                    notes=progress.notes
-                )
-                db.add(new_progress)
-                results.append(new_progress)
+@app.post("/progress-history", response_model=ProgressHistoryResponse)
+async def add_progress_history(progress: ProgressHistoryCreate, db: Session = Depends(get_db)):
+    """Add a progress history entry"""
+    db_progress = ProgressHistory(**progress.dict())
+    db.add(db_progress)
+    
+    # Update the goal's current progress
+    goal = db.query(Goal).filter(Goal.id == progress.goal_id).first()
+    if goal:
+        goal.current_progress = progress.value
+        goal.updated_at = datetime.utcnow()
         
-        db.commit()
-        return {"message": f"Successfully updated {len(results)} progress entries"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        # Check if goal is completed
+        if goal.current_progress >= goal.target_progress:
+            goal.status = GoalStatus.COMPLETED
+    
+    db.commit()
+    db.refresh(db_progress)
+    return db_progress
 
-@app.get("/progress/{goal_id}", response_model=List[ProgressResponse])
-async def get_progress(goal_id: int, db: Session = Depends(get_db)):
-    """Get progress entries for a specific goal"""
-    progress_entries = db.query(ProgressEntry).filter(
-        ProgressEntry.goal_id == goal_id
-    ).order_by(ProgressEntry.created_at.desc()).all()
-    return progress_entries
+@app.post("/sub-tasks", response_model=SubTaskResponse)
+async def create_sub_task(sub_task: SubTaskCreate, db: Session = Depends(get_db)):
+    """Create a new sub-task for a goal"""
+    db_sub_task = SubTask(**sub_task.dict())
+    db.add(db_sub_task)
+    db.commit()
+    db.refresh(db_sub_task)
+    return db_sub_task
 
-@app.get("/daily-progress/{goal_id}", response_model=List[DailyProgressResponse])
-async def get_daily_progress(goal_id: int, db: Session = Depends(get_db)):
-    """Get daily progress entries for a specific goal"""
-    progress_entries = db.query(DailyProgress).filter(
-        DailyProgress.goal_id == goal_id
-    ).order_by(DailyProgress.date.desc()).all()
-    return progress_entries
-
-@app.get("/daily-progress-summary/{date}")
-async def get_daily_progress_summary(
-    date: str,
-    db: Session = Depends(get_db)
-):
-    """Get summary of all progress for a specific date"""
-    try:
-        target_date = datetime.strptime(date, "%Y-%m-%d").date()
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+@app.put("/sub-tasks/{sub_task_id}", response_model=SubTaskResponse)
+async def update_sub_task(sub_task_id: int, is_completed: bool, db: Session = Depends(get_db)):
+    """Update a sub-task completion status"""
+    sub_task = db.query(SubTask).filter(SubTask.id == sub_task_id).first()
+    if not sub_task:
+        raise HTTPException(status_code=404, detail="Sub-task not found")
     
-    daily_progress = db.query(DailyProgress).filter(
-        DailyProgress.date == target_date
-    ).all()
-    
-    total_progress = sum(dp.progress_value for dp in daily_progress)
-    goals_updated = len(daily_progress)
-    notes = [dp.notes for dp in daily_progress if dp.notes]
-    
-    return DailyProgressSummary(
-        date=target_date,
-        total_progress=total_progress,
-        goals_updated=goals_updated,
-        notes=notes
-    )
-
-@app.get("/analytics/{goal_id}")
-async def get_analytics(goal_id: int, db: Session = Depends(get_db)):
-    """Get analytics and visualizations for a goal"""
-    goal = db.query(Goal).filter(Goal.id == goal_id).first()
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
-    
-    progress_entries = db.query(ProgressEntry).filter(
-        ProgressEntry.goal_id == goal_id
-    ).order_by(ProgressEntry.created_at.asc()).all()
-    
-    analytics = progress_tracker.generate_analytics(goal, progress_entries)
-    return analytics
+    sub_task.is_completed = is_completed
+    db.commit()
+    db.refresh(sub_task)
+    return sub_task
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
