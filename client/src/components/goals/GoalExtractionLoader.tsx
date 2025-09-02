@@ -48,7 +48,7 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
     }
 
     // Simulate progress through steps
-    const progressInterval = 50; // Update progress every 50ms
+    const progressInterval = 30; // Update progress every 30ms for smoother animation
     
     let stepTimer: NodeJS.Timeout;
     let progressTimer: NodeJS.Timeout;
@@ -67,11 +67,11 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
         setProgress(prev => {
           if (prev >= 100) {
             clearInterval(progressTimer);
-            // Move to next step
-            stepTimer = setTimeout(() => startStep(stepIndex + 1), 500);
+            // Move to next step with a shorter delay
+            stepTimer = setTimeout(() => startStep(stepIndex + 1), 300);
             return 100;
           }
-          return prev + 2;
+          return prev + 3; // Slightly faster progress for smoother feel
         });
       }, progressInterval);
     };
@@ -85,6 +85,9 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
   }, [isVisible, onComplete]);
 
   if (!isVisible) return null;
+
+  // Calculate overall progress percentage
+  const overallProgress = Math.round(((currentStep + progress / 100) / steps.length) * 100);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -109,7 +112,7 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
               {steps[currentStep]?.title}
             </span>
             <span className="text-sm text-gray-500">
-              {currentStep + 1} of {steps.length}
+              {overallProgress}% Complete
             </span>
           </div>
           
@@ -117,8 +120,26 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
             <div 
               className="h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${overallProgress}%` }}
             />
+          </div>
+          
+          {/* Subtle Step Indicator */}
+          <div className="flex justify-center mt-2">
+            <div className="flex space-x-1">
+              {steps.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index < currentStep 
+                      ? 'bg-blue-500' 
+                      : index === currentStep 
+                        ? 'bg-purple-500' 
+                        : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
