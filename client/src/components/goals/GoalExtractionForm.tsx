@@ -45,10 +45,10 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-            Extract Goals with AI
+            Turn Your Ideas Into Action
           </h2>
           <p className="text-gray-600 max-w-md mx-auto">
-            Describe your goals in text or upload a document. Our AI will extract meaningful, actionable objectives for you.
+            Share your dreams in plain English or upload any document. Our AI transforms your thoughts into clear, trackable goals that actually get done.
           </p>
         </div>
 
@@ -56,7 +56,7 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
         <div className="mb-8">
           <div className="text-center mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-2">Start with Text</h3>
-            <p className="text-sm text-gray-500">Describe what you want to achieve</p>
+                               <p className="text-sm text-gray-500">Just type what's on your mind - we'll figure out the rest</p>
           </div>
           
           <div className="max-w-2xl mx-auto">
@@ -83,7 +83,7 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    <span>Extract Goals</span>
+                                             <span>Make It Happen</span>
                   </>
                 )}
               </button>
@@ -98,7 +98,7 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
         
         <div className="text-center mb-4">
           <ArrowDown className="w-6 h-6 text-gray-400 mx-auto" />
-          <p className="text-sm text-gray-500 mt-2">Or upload a document</p>
+                           <p className="text-sm text-gray-500 mt-2">Or drop a document</p>
         </div>
 
         {/* File Upload Section */}
@@ -108,9 +108,9 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
             
             <div className="mb-4">
               <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Document</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Support for PDF, DOCX, and TXT files
-              </p>
+                                   <p className="text-sm text-gray-500 mb-4">
+                       Works with PDFs, Word docs, and text files
+                     </p>
             </div>
 
             <input
