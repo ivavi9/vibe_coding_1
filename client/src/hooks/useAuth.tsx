@@ -31,16 +31,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check for existing auth token
     const token = localStorage.getItem('auth_token')
+    console.log('Checking for existing auth token:', token ? 'Found' : 'Not found');
     if (token) {
       // Validate token with backend
+      console.log('Validating existing token...');
       validateToken(token)
     } else {
+      console.log('No token found, setting loading to false');
       setIsLoading(false)
     }
   }, [])
 
   const validateToken = async (token: string) => {
     try {
+      // TESTING: Handle mock tokens for development
+      if (import.meta.env.DEV && token.startsWith('mock-jwt-token-')) {
+        // Mock token validation - always valid in development
+        console.log('Validating mock token...');
+        const mockUser = {
+          id: 'test-user-123',
+          email: 'sonali@example.com',
+          name: 'Sonali',
+          picture: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+          created_at: new Date().toISOString()
+        };
+        setUser(mockUser);
+        setIsLoading(false);
+        return;
+      }
+
+      // Real token validation with backend (when implemented)
+      console.log('Validating real token with backend...');
       const response = await fetch('http://localhost:8000/api/v1/auth/validate', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -56,7 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Token validation failed:', error)
-      localStorage.removeItem('auth_token')
+      // Only remove token if it's not a mock token
+      if (!token.startsWith('mock-jwt-token-')) {
+        localStorage.removeItem('auth_token')
+      }
     } finally {
       setIsLoading(false)
     }
