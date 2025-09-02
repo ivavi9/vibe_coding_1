@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 const GoogleAuthCallback: React.FC = () => {
   const [searchParams] = useSearchParams();

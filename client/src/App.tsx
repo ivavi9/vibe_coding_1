@@ -1,21 +1,29 @@
 import { Routes, Route } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Dashboard from './pages/Dashboard'
 import Goals from './pages/Goals'
 import { Analytics } from './pages/Analytics'
+import Auth from './pages/Auth'
+import GoogleAuthCallback from './pages/GoogleAuthCallback'
 import { Layout } from './components/Layout'
+import ProtectedRoute from './components/auth/ProtectedRoute'
 import { AuthProvider } from './hooks/useAuth'
 import { Toaster } from './components/ui/Toaster'
 
 function App() {
   return (
     <AuthProvider>
-      <Layout>
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route
-              path="/"
-              element={
+      <Routes>
+        {/* Public routes */}
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/callback" element={<GoogleAuthCallback />} />
+        
+        {/* Protected routes with Layout */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -24,11 +32,15 @@ function App() {
                 >
                   <Dashboard />
                 </motion.div>
-              }
-            />
-            <Route
-              path="/goals"
-              element={
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/goals"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -37,11 +49,15 @@ function App() {
                 >
                   <Goals />
                 </motion.div>
-              }
-            />
-            <Route
-              path="/analytics"
-              element={
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <Layout>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -50,12 +66,12 @@ function App() {
                 >
                   <Analytics />
                 </motion.div>
-              }
-            />
-          </Routes>
-        </AnimatePresence>
-        <Toaster />
-      </Layout>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+      <Toaster />
     </AuthProvider>
   )
 }
