@@ -9,6 +9,7 @@ import { useGuestMode } from '../hooks/useGuestMode';
 import { useAuth } from '../hooks/useAuth';
 import ToastContainer from '../components/ui/ToastContainer';
 import GoalExtractionLoader from '../components/goals/GoalExtractionLoader';
+import { X } from 'lucide-react';
 
 interface Goal {
   id: string;
@@ -35,6 +36,7 @@ const Goals: React.FC = () => {
   const [shouldCompleteLoader, setShouldCompleteLoader] = useState(false);
   const [extractedGoalsRef, setExtractedGoalsRef] = useState<HTMLDivElement | null>(null);
   const [addedGoals, setAddedGoals] = useState<Set<string>>(new Set()); // Track added goals
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(true);
   const { toasts, removeToast, showSuccess, showError, showWarning } = useToast();
   const { isAuthenticated } = useAuth();
   const { canExtractGoals, extractionCount, maxExtractions, incrementExtractionCount } = useGuestMode();
@@ -42,6 +44,12 @@ const Goals: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated) {
       fetchGoals();
+      // Auto-dismiss welcome banner after 5 seconds
+      const timer = setTimeout(() => {
+        setShowWelcomeBanner(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
     }
   }, [isAuthenticated]);
 
@@ -353,16 +361,25 @@ const Goals: React.FC = () => {
         )}
 
         {/* Authenticated User Banner */}
-        {isAuthenticated && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <div>
-                <h3 className="text-sm font-medium text-green-800">Welcome back!</h3>
-                <p className="text-xs text-green-700">
-                  You have unlimited access to extract goals and save your progress.
-                </p>
+        {isAuthenticated && showWelcomeBanner && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 animate-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <div>
+                  <h3 className="text-sm font-medium text-green-800">Welcome back!</h3>
+                  <p className="text-xs text-green-700">
+                    You have unlimited access to extract goals and save your progress.
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => setShowWelcomeBanner(false)}
+                className="text-green-500 hover:text-green-700 transition-colors p-1"
+                aria-label="Dismiss welcome message"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}
