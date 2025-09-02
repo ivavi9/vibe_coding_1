@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const validateToken = async (token: string) => {
     try {
       // TESTING: Handle mock tokens for development
-      if (import.meta.env.DEV && token.startsWith('mock-jwt-token-')) {
+      if (token.startsWith('mock-jwt-token-')) {
         // Mock token validation - always valid in development
         console.log('Validating mock token...');
         const mockUser = {
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsGoogleLoading(true);
     try {
       // TESTING: Mock authentication for development
-      if (import.meta.env.DEV) {
+      if (true) { // Always use mock auth for now
         // Simulate Google OAuth delay
         await new Promise(resolve => setTimeout(resolve, 1000));
         

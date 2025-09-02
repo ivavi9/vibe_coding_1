@@ -52,8 +52,8 @@ const Goals: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('Goals API response data:', data);
-        setGoals(data.goals || []);
-        console.log('Goals state updated:', data.goals || []);
+        setGoals(data.data || []);
+        console.log('Goals state updated:', data.data || []);
       } else {
         console.error('Goals API failed with status:', response.status);
         const errorText = await response.text();
@@ -177,13 +177,17 @@ const Goals: React.FC = () => {
   };
 
   const handleCreateGoal = async (goal: ExtractedGoal) => {
+    console.log('handleCreateGoal called with goal:', goal);
+    console.log('Current authentication state:', { isAuthenticated });
+    
     if (!isAuthenticated) {
       showWarning('Guest Mode', 'You need to sign in to save goals and track your progress.');
       return;
     }
 
     try {
-              const response = await fetch('http://localhost:8000/api/v1/goals/', {
+      console.log('Creating goal via API...');
+      const response = await fetch('http://localhost:8000/api/v1/goals/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -195,12 +199,20 @@ const Goals: React.FC = () => {
         })
       });
 
+      console.log('Goal creation API response status:', response.status);
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('Goal creation API response data:', responseData);
+        
         showSuccess('Goal Created', 'Your goal has been created successfully!');
         await fetchGoals();
         setShowExtractedGoals(false);
         setExtractedGoals([]);
+        
+        console.log('Goal created successfully, goals list updated');
       } else {
+        const errorText = await response.text();
+        console.error('Goal creation failed with status:', response.status, 'Error:', errorText);
         showError('Failed to Create Goal', 'Something went wrong while creating your goal. Please try again.');
       }
     } catch (error) {
