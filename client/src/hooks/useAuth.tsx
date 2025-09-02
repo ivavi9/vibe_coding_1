@@ -63,8 +63,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const loginWithGoogle = async () => {
-    setIsGoogleLoading(true)
+    setIsGoogleLoading(true);
     try {
+      // TESTING: Mock authentication for development
+      if (import.meta.env.DEV) {
+        // Simulate Google OAuth delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Mock user data
+        const mockUser = {
+          id: 'test-user-123',
+          email: 'sonali@example.com',
+          name: 'Sonali',
+          picture: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+          created_at: new Date().toISOString()
+        };
+        
+        // Mock token
+        const mockToken = 'mock-jwt-token-' + Date.now();
+        
+        // Store mock data
+        localStorage.setItem('auth_token', mockToken);
+        setUser(mockUser);
+        setIsGoogleLoading(false);
+        return;
+      }
+      
       // Generate Google OAuth URL
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${GOOGLE_CLIENT_ID}&` +

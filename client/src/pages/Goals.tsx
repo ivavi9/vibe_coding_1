@@ -8,6 +8,7 @@ import { useToast } from '../hooks/useToast';
 import { useGuestMode } from '../hooks/useGuestMode';
 import { useAuth } from '../hooks/useAuth';
 import ToastContainer from '../components/ui/ToastContainer';
+import GoalExtractionLoader from '../components/goals/GoalExtractionLoader';
 
 interface Goal {
   id: string;
@@ -267,12 +268,11 @@ const Goals: React.FC = () => {
   // Show loading state
   if (isExtracting) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Extracting goals...</p>
-        </div>
-      </div>
+      <GoalExtractionLoader
+        isVisible={isExtracting}
+        onComplete={() => {}}
+        shouldComplete={shouldCompleteLoader}
+      />
     );
   }
 
