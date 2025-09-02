@@ -32,7 +32,7 @@ const Goals: React.FC = () => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [shouldCompleteLoader, setShouldCompleteLoader] = useState(false);
   const [extractedGoalsRef, setExtractedGoalsRef] = useState<HTMLDivElement | null>(null);
-  const { toasts, removeToast, showSuccess } = useToast();
+  const { toasts, removeToast, showSuccess, showError, showWarning } = useToast();
 
   useEffect(() => {
     fetchGoals();
@@ -79,13 +79,18 @@ const Goals: React.FC = () => {
       });
       
       const data = await response.json();
-      if (data.success) {
+      console.log('Text extraction response:', data); // Debug log
+      
+      // Check if we have goals data (handle different response structures)
+      const goals = data.goals || data.data?.goals || [];
+      
+      if (goals && goals.length > 0) {
         // Signal the loader to complete gracefully
         setShouldCompleteLoader(true);
         
         // Wait for graceful completion, then show results
         setTimeout(() => {
-          setExtractedGoals(data.goals);
+          setExtractedGoals(goals);
           setShowExtractedGoals(true);
           setIsExtracting(false);
           setShouldCompleteLoader(false);
@@ -96,15 +101,17 @@ const Goals: React.FC = () => {
           }, 100);
         }, 800); // Total graceful completion time
       } else {
-        alert('No goals extracted. Please try different text.');
+        // No goals extracted - show user-friendly message
+        console.log('No goals extracted from text');
         setIsExtracting(false);
         setShouldCompleteLoader(false);
+        showWarning('No Goals Found', 'Try describing your goals in more detail or with different wording.');
       }
     } catch (error) {
       console.error('Error extracting goals:', error);
-      alert('Failed to extract goals. Please try again.');
       setIsExtracting(false);
       setShouldCompleteLoader(false);
+      showError('Extraction Failed', 'Something went wrong while processing your text. Please try again.');
     }
   };
 
@@ -123,13 +130,18 @@ const Goals: React.FC = () => {
       });
       
       const data = await response.json();
-      if (data.success) {
+      console.log('File extraction response:', data); // Debug log
+      
+      // Check if we have goals data (handle different response structures)
+      const goals = data.extracted_goals || data.data?.extracted_goals || data.goals || [];
+      
+      if (goals && goals.length > 0) {
         // Signal the loader to complete gracefully
         setShouldCompleteLoader(true);
         
         // Wait for graceful completion, then show results
         setTimeout(() => {
-          setExtractedGoals(data.extracted_goals);
+          setExtractedGoals(goals);
           setShowExtractedGoals(true);
           setIsExtracting(false);
           setShouldCompleteLoader(false);
@@ -140,15 +152,17 @@ const Goals: React.FC = () => {
           }, 100);
         }, 800); // Total graceful completion time
       } else {
-        alert('No goals extracted from document. Please try a different file.');
+        // No goals extracted - show user-friendly message
+        console.log('No goals extracted from document');
         setIsExtracting(false);
         setShouldCompleteLoader(false);
+        showWarning('No Goals Found', 'The document didn\'t contain clear goal descriptions. Try a different document or add more context.');
       }
     } catch (error) {
       console.error('Error uploading document:', error);
-      alert('Failed to upload document. Please try again.');
       setIsExtracting(false);
       setShouldCompleteLoader(false);
+      showError('Upload Failed', 'Something went wrong while processing your document. Please try again.');
     }
   };
 
