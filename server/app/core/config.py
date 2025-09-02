@@ -1,74 +1,66 @@
 """
-Configuration settings for the Clarity API.
-
-This module contains all configuration settings based on environment variables
-and the specifications from the version-3 manifest.
+Configuration management for Clarity API.
+Centralizes all environment variables and app settings.
 """
-
 from pydantic_settings import BaseSettings
 from typing import List
 import os
+from dotenv import load_dotenv
 
+# Load environment variables
+load_dotenv()
 
 class Settings(BaseSettings):
-    """Application settings."""
+    """Application settings and configuration."""
     
-    # Application
-    APP_NAME: str = "Clarity API"
-    APP_VERSION: str = "1.0.0"
-    DEBUG: bool = False
+    # API Configuration
+    API_V1_STR: str = "/api/v1"
+    PROJECT_NAME: str = "Clarity API"
+    PROJECT_DESCRIPTION: str = "AI-Native Personal Achievement Partner API"
+    VERSION: str = "1.0.0"
     
-    # Security
-    SECRET_KEY: str = "your-secret-key-here"
-    JWT_SECRET_KEY: str = "your-jwt-secret-key-here"
-    JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    # Server Configuration
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    RELOAD: bool = True
     
-    # Database
-    DATABASE_URL: str = "postgresql://clarity_user:clarity_password@localhost:5432/clarity"
-    DATABASE_TEST_URL: str = "postgresql://clarity_user:clarity_password@localhost:5432/clarity_test"
-    
-    # Redis
-    REDIS_URL: str = "redis://localhost:6379"
-    
-    # CORS
-    CORS_ORIGINS: List[str] = [
+    # CORS Configuration
+    BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
+        "http://localhost:3001", 
         "http://127.0.0.1:3000",
-        "http://localhost:3001",
+        "http://127.0.0.1:3001"
     ]
     
-    # Allowed Hosts
-    ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1", "0.0.0.0"]
+    # API Keys
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     
-    # AI Integration
-    GEMINI_API_KEY: str = ""
-    OPENAI_API_KEY: str = ""
+    # Gemini Configuration
+    GEMINI_MODEL: str = "gemini-1.5-flash"
     
-    # Logging
-    LOG_LEVEL: str = "INFO"
-    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    
-    # Rate Limiting
-    RATE_LIMIT_PER_MINUTE: int = 60
-    
-    # File Upload
+    # File Upload Configuration
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
-    ALLOWED_FILE_TYPES: List[str] = [".txt", ".pdf", ".docx"]
     
-    # Environment
-    ENVIRONMENT: str = "development"
+    # Get allowed file types from env or use defaults
+    @property
+    def ALLOWED_FILE_TYPES(self) -> List[str]:
+        env_types = os.getenv("ALLOWED_FILE_TYPES", "")
+        if env_types:
+            # Parse comma-separated string from env
+            return [f"application/{ext.strip('.')}" if ext.startswith('.') else ext for ext in env_types.split(',')]
+        return [
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "text/plain"
+        ]
+    
+    # Logging Configuration
+    LOG_LEVEL: str = "INFO"
     
     class Config:
         env_file = ".env"
         case_sensitive = True
 
-
-# Create settings instance
+# Create global settings instance
 settings = Settings()
 
-# Override with environment variables if present
-if os.getenv("ENVIRONMENT") == "production":
-    settings.DEBUG = False
-    settings.LOG_LEVEL = "WARNING"
