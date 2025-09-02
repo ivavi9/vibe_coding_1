@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   GoalExtractionForm,
   ExtractedGoalsList,
-  UserGoalsList
+  GoalManagement
 } from '../components/goals';
 import { useToast } from '../hooks/useToast';
 import ToastContainer from '../components/ui/ToastContainer';
@@ -207,10 +207,12 @@ const Goals: React.FC = () => {
           />
         )}
 
-        {/* User Goals List */}
-        <UserGoalsList
+        {/* Goal Management */}
+        <GoalManagement
           goals={goals}
           onDeleteGoal={handleDeleteGoal}
+          onCompleteGoal={handleCompleteGoal}
+          onRecoverGoal={handleRecoverGoal}
         />
       </div>
 
