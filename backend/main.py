@@ -15,7 +15,7 @@ from services.progress_tracker import ProgressTracker
 from schemas import (
     GoalCreate, GoalResponse, ProgressCreate, ProgressResponse,
     DailyProgressCreate, DailyProgressResponse, GoalWithProgress,
-    DailyProgressSummary
+    DailyProgressSummary, GoalUpdate
 )
 
 load_dotenv()
@@ -176,20 +176,17 @@ async def get_goals(db: Session = Depends(get_db)):
 
 @app.get("/goals/{goal_id}", response_model=GoalWithProgress)
 async def get_goal(goal_id: int, db: Session = Depends(get_db)):
-    """Get a specific goal with all its progress information"""
+    """Get a specific goal with all its progress"""
     goal = db.query(Goal).filter(Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
     
-    progress_entries = db.query(ProgressEntry).filter(
-        ProgressEntry.goal_id == goal_id
-    ).order_by(ProgressEntry.created_at.desc()).all()
+    # Get all daily progress for this goal
+    daily_progress = db.query(DailyProgress).filter(DailyProgress.goal_id == goal_id).all()
     
-    daily_progress = db.query(DailyProgress).filter(
-        DailyProgress.goal_id == goal_id
-    ).order_by(DailyProgress.date.desc()).all()
-    
+    # Calculate current progress
     current_progress = sum(dp.progress_value for dp in daily_progress)
+    total_progress_entries = len(daily_progress)
     
     return GoalWithProgress(
         id=goal.id,
@@ -201,10 +198,68 @@ async def get_goal(goal_id: int, db: Session = Depends(get_db)):
         created_at=goal.created_at,
         updated_at=goal.updated_at,
         current_progress=current_progress,
-        total_progress_entries=len(daily_progress),
-        progress_entries=progress_entries,
+        total_progress_entries=total_progress_entries,
+        progress_entries=[],
         daily_progress=daily_progress
     )
+
+@app.put("/goals/{goal_id}", response_model=GoalResponse)
+async def update_goal(
+    goal_id: int, 
+    goal_update: GoalUpdate, 
+    db: Session = Depends(get_db)
+):
+    """Update a goal"""
+    goal = db.query(Goal).filter(Goal.id == goal_id).first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    # Update goal fields
+    for field, value in goal_update.dict(exclude_unset=True).items():
+        setattr(goal, field, value)
+    
+    goal.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(goal)
+    
+    return GoalResponse(
+        id=goal.id,
+        title=goal.title,
+        description=goal.description,
+        target_date=goal.target_date,
+        priority=goal.priority,
+        category=goal.category,
+        created_at=goal.created_at,
+        updated_at=goal.updated_at
+    )
+
+@app.delete("/goals/{goal_id}")
+async def delete_goal(goal_id: int, db: Session = Depends(get_db)):
+    """Delete a goal and all its progress"""
+    goal = db.query(Goal).filter(Goal.id == goal_id).first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    # Delete associated daily progress first
+    db.query(DailyProgress).filter(DailyProgress.goal_id == goal_id).delete()
+    
+    # Delete the goal
+    db.delete(goal)
+    db.commit()
+    
+    return {"message": "Goal deleted successfully"}
+
+@app.delete("/goals")
+async def clear_all_goals(db: Session = Depends(get_db)):
+    """Clear all goals and progress"""
+    # Delete all daily progress
+    db.query(DailyProgress).delete()
+    
+    # Delete all goals
+    db.query(Goal).delete()
+    db.commit()
+    
+    return {"message": "All goals cleared successfully"}
 
 @app.post("/progress", response_model=ProgressResponse)
 async def add_progress(

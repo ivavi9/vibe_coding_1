@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
+  Plus, 
+  Search, 
+  Star, 
   Target, 
   Calendar, 
-  Plus,
-  Filter,
-  Search,
-  MoreVertical,
-  Edit,
-  Trash2,
-  TrendingUp,
-  Star,
-  BarChart3
+  Edit3, 
+  Trash2, 
+  BarChart3,
+  AlertTriangle,
+  MoreVertical
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -27,6 +26,14 @@ const Goals = () => {
   const [progressForm, setProgressForm] = useState({
     progress_value: '',
     notes: ''
+  });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    priority: 'medium',
+    category: 'general'
   });
 
   useEffect(() => {
@@ -70,6 +77,32 @@ const Goals = () => {
     setSelectedGoal(goal);
     setProgressForm({ progress_value: '', notes: '' });
     setShowProgressModal(true);
+  };
+
+  const openEditModal = (goal) => {
+    setSelectedGoal(goal);
+    setEditForm({
+      title: goal.title,
+      description: goal.description,
+      priority: goal.priority,
+      category: goal.category
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditGoal = async (e) => {
+    e.preventDefault();
+    if (!selectedGoal) return;
+
+    try {
+      await axios.put(`/goals/${selectedGoal.id}`, editForm);
+      fetchGoals();
+      setShowEditModal(false);
+      setSelectedGoal(null);
+      setEditForm({ title: '', description: '', priority: 'medium', category: 'general' });
+    } catch (error) {
+      console.error('Error editing goal:', error);
+    }
   };
 
   const filteredGoals = goals.filter(goal => {
@@ -295,16 +328,30 @@ const Goals = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
+                <div className="flex gap-2 mt-4">
+                  <button
                     onClick={() => openProgressModal(goal)}
-                    className="flex-1 btn btn-sm btn-secondary flex items-center justify-center gap-2"
+                    className="btn btn-primary btn-sm flex items-center gap-2"
                   >
-                    <TrendingUp className="w-4 h-4" />
+                    <BarChart3 className="w-4 h-4" />
                     Track Progress
                   </button>
-                  <button className="btn btn-sm btn-ghost">
-                    <Edit className="w-4 h-4" />
+                  <button
+                    onClick={() => openEditModal(goal)}
+                    className="btn btn-secondary btn-sm flex items-center gap-2"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedGoal(goal);
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="btn btn-danger btn-sm flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
                   </button>
                 </div>
               </motion.div>

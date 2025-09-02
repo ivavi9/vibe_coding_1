@@ -9,8 +9,21 @@ class GoalBase(BaseModel):
     priority: str = "medium"
     category: str = "general"
 
-class GoalCreate(GoalBase):
-    pass
+class GoalCreate(BaseModel):
+    title: str
+    description: str
+    target_date: Optional[datetime] = None
+    priority: str = "medium"
+    category: str = "general"
+
+class GoalUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    target_date: Optional[datetime] = None
+    priority: Optional[str] = None
+    category: Optional[str] = None
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class GoalResponse(GoalBase):
     id: int
