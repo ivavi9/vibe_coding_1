@@ -125,7 +125,10 @@ const GoalExtractionLoader: React.FC<GoalExtractionLoaderProps> = ({
         {/* Step Details */}
         <div className="text-center mb-6">
           <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-3 ${steps[currentStep]?.color}`}>
-            {steps[currentStep]?.icon && <steps[currentStep].icon className="w-6 h-6" />}
+            {(() => {
+              const IconComponent = steps[currentStep]?.icon;
+              return IconComponent ? <IconComponent className="w-6 h-6" /> : null;
+            })()}
           </div>
           <p className="text-sm text-gray-600">
             {steps[currentStep]?.description}
