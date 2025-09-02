@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 const Header = () => {
   const location = useLocation();
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path) => location.pathname === path;
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -23,30 +23,30 @@ const Header = () => {
             <Link
               to="/"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/') 
-                  ? 'bg-blue-100 text-blue-700' 
+                isActive('/')
+                  ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
               Dashboard
             </Link>
-            
+
             <Link
               to="/goals"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/goals') 
-                  ? 'bg-blue-100 text-blue-700' 
+                isActive('/goals')
+                  ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
               Goals
             </Link>
-            
+
             <Link
               to="/analytics"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive('/analytics') 
-                  ? 'bg-blue-100 text-blue-700' 
+                isActive('/analytics')
+                  ? 'bg-blue-100 text-blue-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
