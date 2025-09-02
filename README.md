@@ -1,121 +1,57 @@
-# Progress Tracker
+# Clarity - AI-Native Personal Achievement Partner
 
-A beautiful, Apple-inspired progress tracking application built with Python FastAPI backend and React frontend. Upload your goal documents and track your progress with intuitive visualizations.
+## Project Overview
 
-## Features
+Clarity is an AI-native personal achievement partner that eliminates the friction between ambition and action. Built with modern technologies and following Apple's human interface guidelines, it provides a minimalist, elegant interface for goal tracking and progress management.
 
-- 📄 **Document Upload**: Upload PDF, DOCX, or TXT files containing your goals
-- 🤖 **AI-Powered Goal Extraction**: Automatically extract goals from documents using OpenAI
-- 📊 **Beautiful Analytics**: Track progress with Apple-inspired design and charts
-- 🎯 **Goal Management**: Organize and categorize your goals
-- 📈 **Progress Visualization**: See your progress with intuitive graphics and insights
-- 📱 **Responsive Design**: Works perfectly on desktop and mobile devices
+## Core Features
+
+- **Intelligent Goal Extraction**: AI-powered goal creation from natural language input
+- **Smart Progress Tracking**: Automatic progress updates through natural language
+- **Minimalist Design**: Clean, uncluttered interface inspired by Apple's design principles
+- **Seamless Flow**: Fluid user experience with immediate feedback and smooth transitions
 
 ## Tech Stack
 
-### Backend
-- **FastAPI**: Modern, fast web framework for building APIs
-- **SQLAlchemy**: SQL toolkit and ORM
-- **OpenAI API**: AI-powered document parsing
-- **Python**: Core backend language
-
 ### Frontend
-- **React**: Modern UI library
-- **Framer Motion**: Smooth animations
-- **Recharts**: Beautiful chart components
-- **Lucide React**: Beautiful icons
-- **CSS Variables**: Apple-inspired design system
+- React with TypeScript
+- Vite for build tooling
+- Tailwind CSS for styling
+- Framer Motion for animations
+- React Hook Form with Zod validation
 
-## Installation
+### Backend
+- FastAPI with Python
+- PostgreSQL database
+- JWT authentication
+- Google Gemini 1.5 API integration
+- Docker containerization
 
-### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- OpenAI API key
+## Project Structure
 
-### Backend Setup
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd progress_tracker
+```
+/
+├── client/          # Frontend React application
+├── server/          # Backend FastAPI application
+├── docker-compose.yml
+├── LICENSE
+└── version-3-manifest.md
 ```
 
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+## Quick Start
 
-3. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
+1. Clone the repository
+2. Run `docker-compose up` for one-command local environment setup
+3. Access the application at `http://localhost:3000`
 
-4. Set up environment variables:
-```bash
-cp env.example .env
-# Edit .env and add your OpenAI API key
-```
+## Development
 
-5. Run the backend:
-```bash
-cd backend
-python main.py
-```
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines and coding standards.
 
-The backend will be available at `http://localhost:8000`
+## Manifest
 
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm start
-```
-
-The frontend will be available at `http://localhost:3000`
-
-## Usage
-
-1. **Upload Documents**: Go to the Upload page and drag & drop your goal documents
-2. **View Goals**: Check the Goals page to see all extracted goals
-3. **Track Progress**: Add progress entries for your goals
-4. **Analytics**: Visit the Analytics page to see beautiful visualizations of your progress
-
-## API Endpoints
-
-- `POST /upload-document`: Upload and parse a document
-- `GET /goals`: Get all goals
-- `POST /progress`: Add progress entry
-- `GET /progress/{goal_id}`: Get progress for a specific goal
-- `GET /analytics/{goal_id}`: Get analytics for a goal
-
-## Design Philosophy
-
-This application follows Apple's design principles:
-- **Simplicity**: Clean, uncluttered interface
-- **Clarity**: Clear typography and visual hierarchy
-- **Depth**: Subtle shadows and layering
-- **Consistency**: Unified design system
-- **Accessibility**: High contrast and readable text
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+This project follows the specifications outlined in [version-3-manifest.md](./version-3-manifest.md).
 
 ## License
 
-MIT License - see LICENSE file for details
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.

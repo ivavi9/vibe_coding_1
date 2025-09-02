@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-background text-primary-text;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  
+  * {
+    @apply border-border;
+  }
+}
+
+@layer components {
+  /* Custom component styles based on version-3 manifest */
+  
+  .btn-primary {
+    @apply bg-accent text-white px-6 py-3 rounded-lg font-medium 
+           hover:bg-accent/90 transition-colors duration-200 
+           focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-primary-text border border-border px-6 py-3 rounded-lg font-medium
+           hover:bg-gray-50 transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border border-border rounded-lg 
+           focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2
+           placeholder:text-primary-secondary;
+  }
+  
+  .card {
+    @apply bg-panel border border-border rounded-lg p-6 shadow-sm;
+  }
+  
+  .heading-1 {
+    @apply text-h1 font-bold text-primary-text;
+  }
+  
+  .heading-2 {
+    @apply text-h2 font-semibold text-primary-text;
+  }
+  
+  .body-text {
+    @apply text-body text-primary-text;
+  }
+  
+  .caption-text {
+    @apply text-small text-primary-secondary;
+  }
+}
+
+@layer utilities {
+  /* Custom utility classes */
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Animation utilities for Framer Motion compatibility */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-in-out;
+  }
+  
+  .animate-stagger {
+    animation: stagger 0.1s ease-in-out;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  @apply outline-none ring-2 ring-accent/50 ring-offset-2;
+}
+
+/* Selection styles */
+::selection {
+  @apply bg-accent/20 text-primary-text;
+}
