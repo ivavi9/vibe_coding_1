@@ -1,5 +1,5 @@
+import React from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import Dashboard from './pages/Dashboard'
 import Goals from './pages/Goals'
 import { Analytics } from './pages/Analytics'
@@ -22,14 +22,7 @@ function App() {
           path="/"
           element={
             <Layout>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                <Dashboard />
-              </motion.div>
+              <Dashboard />
             </Layout>
           }
         />
@@ -37,14 +30,7 @@ function App() {
           path="/goals"
           element={
             <Layout>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                <Goals />
-              </motion.div>
+              <Goals />
             </Layout>
           }
         />
@@ -52,14 +38,7 @@ function App() {
           path="/analytics"
           element={
             <Layout>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                <Analytics />
-              </motion.div>
+              <Analytics />
             </Layout>
           }
         />

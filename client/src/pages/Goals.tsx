@@ -282,15 +282,28 @@ const Goals: React.FC = () => {
         {/* Guest Mode Banner */}
         {!isAuthenticated && (
           <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-              <div>
-                <h3 className="text-sm font-medium text-yellow-800">Guest Mode</h3>
-                <p className="text-xs text-yellow-700">
-                  You can extract goals {extractionCount}/{maxExtractions} times. 
-                  {extractionCount >= maxExtractions && ' Sign in to continue extracting goals and save your progress.'}
-                </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <div>
+                  <h3 className="text-sm font-medium text-yellow-800">Guest Mode</h3>
+                  <p className="text-xs text-yellow-700">
+                    You can extract goals {extractionCount}/{maxExtractions} times. 
+                    {extractionCount >= maxExtractions && ' Sign in to continue extracting goals and save your progress.'}
+                  </p>
+                </div>
               </div>
+              {extractionCount >= maxExtractions && (
+                <div className="flex items-center space-x-3">
+                  <span className="text-xs text-yellow-600">Ready to unlock unlimited access?</span>
+                  <button
+                    onClick={() => window.location.href = '/auth'}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+                  >
+                    Sign In with Google
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
