@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, X } from 'lucide-react';
+import { FileText, X, Upload, ArrowDown, Sparkles } from 'lucide-react';
 import GoalExtractionLoader from './GoalExtractionLoader';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
@@ -39,65 +39,41 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
 
   return (
     <>
-      <div className="space-y-6">
-        {/* Text Input for Goal Extraction */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Extract Goals from Text</h2>
-          <div className="space-y-4">
+      <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+            Extract Goals with AI
+          </h2>
+          <p className="text-gray-600 max-w-md mx-auto">
+            Describe your goals in text or upload a document. Our AI will extract meaningful, actionable objectives for you.
+          </p>
+        </div>
+
+        {/* Text Input Section */}
+        <div className="mb-8">
+          <div className="text-center mb-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Start with Text</h3>
+            <p className="text-sm text-gray-500">Describe what you want to achieve</p>
+          </div>
+          
+          <div className="max-w-2xl mx-auto">
             <textarea
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              placeholder="Describe your goals, training plan, or what you want to achieve..."
-              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              placeholder="I want to read 12 books this year, run a marathon, and learn to play guitar..."
+              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-center text-lg"
               rows={4}
               disabled={isLoading}
             />
-            <button
-              onClick={handleTextExtract}
-              disabled={!textInput.trim() || isLoading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
-            >
-              {isLoading ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                'Extract Goals'
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* File Upload for Goal Extraction */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Extract Goals from Document</h2>
-          <div className="space-y-4">
-            <input
-              type="file"
-              accept=".pdf,.docx,.txt"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isLoading}
-            />
-            {selectedFile && (
-              <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg">
-                <FileText className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-600">{selectedFile.name}</span>
-                <button
-                  onClick={removeFile}
-                  className="text-red-500 hover:text-red-700"
-                  disabled={isLoading}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-            {selectedFile && (
+            
+            <div className="mt-4 flex justify-center">
               <button
-                onClick={handleFileExtract}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                disabled={isLoading}
+                onClick={handleTextExtract}
+                disabled={!textInput.trim() || isLoading}
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 flex items-center space-x-2 shadow-lg"
               >
                 {isLoading ? (
                   <>
@@ -105,9 +81,96 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
                     <span>Processing...</span>
                   </>
                 ) : (
-                  'Extract Goals from Document'
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    <span>Extract Goals</span>
+                  </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Flow Divider */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="w-px h-16 bg-gradient-to-b from-transparent via-gray-300 to-transparent"></div>
+        </div>
+        
+        <div className="text-center mb-4">
+          <ArrowDown className="w-6 h-6 text-gray-400 mx-auto" />
+          <p className="text-sm text-gray-500 mt-2">Or upload a document</p>
+        </div>
+
+        {/* File Upload Section */}
+        <div className="max-w-2xl mx-auto">
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors duration-200">
+            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            
+            <div className="mb-4">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Document</h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Support for PDF, DOCX, and TXT files
+              </p>
+            </div>
+
+            <input
+              type="file"
+              accept=".pdf,.docx,.txt"
+              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+              className="hidden"
+              id="file-upload"
+              disabled={isLoading}
+            />
+            
+            <label
+              htmlFor="file-upload"
+              className="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FileText className="w-5 h-5 mr-2" />
+              Choose File
+            </label>
+
+            {selectedFile && (
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-blue-900">{selectedFile.name}</p>
+                      <p className="text-xs text-blue-600">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={removeFile}
+                    className="text-blue-500 hover:text-blue-700 transition-colors p-1"
+                    disabled={isLoading}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="mt-4">
+                  <button
+                    onClick={handleFileExtract}
+                    className="w-full px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <LoadingSpinner size="sm" />
+                        <span>Processing Document...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        <span>Extract Goals from Document</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

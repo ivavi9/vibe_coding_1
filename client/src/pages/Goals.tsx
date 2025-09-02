@@ -4,6 +4,8 @@ import {
   ExtractedGoalsList,
   UserGoalsList
 } from '../components/goals';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from '../components/ui/ToastContainer';
 
 interface Goal {
   id: string;
@@ -29,6 +31,7 @@ const Goals: React.FC = () => {
   const [showExtractedGoals, setShowExtractedGoals] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [shouldCompleteLoader, setShouldCompleteLoader] = useState(false);
+  const { toasts, removeToast, showSuccess } = useToast();
 
   useEffect(() => {
     fetchGoals();
@@ -166,9 +169,10 @@ const Goals: React.FC = () => {
       const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}`, {
         method: 'DELETE'
       });
-
+      
       if (response.ok) {
         await fetchGoals();
+        showSuccess('Goal Deleted', 'The goal has been successfully removed from your list.');
       } else {
         alert('Failed to delete goal. Please try again.');
       }
@@ -183,31 +187,36 @@ const Goals: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      {/* Goal Extraction Form */}
-      <GoalExtractionForm
-        onTextExtract={handleTextExtract}
-        onFileExtract={handleFileExtract}
-        isLoading={isExtracting}
-        shouldComplete={shouldCompleteLoader}
-      />
-
-      {/* Extracted Goals List */}
-      {showExtractedGoals && (
-        <ExtractedGoalsList
-          goals={extractedGoals}
-          onEditGoal={handleEditGoal}
-          onCreateGoal={handleCreateGoal}
+    <>
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        {/* Goal Extraction Form */}
+        <GoalExtractionForm
+          onTextExtract={handleTextExtract}
+          onFileExtract={handleFileExtract}
           isLoading={isExtracting}
+          shouldComplete={shouldCompleteLoader}
         />
-      )}
 
-      {/* User Goals List */}
-      <UserGoalsList
-        goals={goals}
-        onDeleteGoal={handleDeleteGoal}
-      />
-    </div>
+        {/* Extracted Goals List */}
+        {showExtractedGoals && (
+          <ExtractedGoalsList
+            goals={extractedGoals}
+            onEditGoal={handleEditGoal}
+            onCreateGoal={handleCreateGoal}
+            isLoading={isExtracting}
+          />
+        )}
+
+        {/* User Goals List */}
+        <UserGoalsList
+          goals={goals}
+          onDeleteGoal={handleDeleteGoal}
+        />
+      </div>
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
+    </>
   );
 };
 
