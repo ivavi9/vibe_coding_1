@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FileText, X, Upload, ArrowDown, Sparkles } from 'lucide-react';
+import { FileText, X, Upload, ArrowDown, Sparkles, Target } from 'lucide-react';
 import GoalExtractionLoader from './GoalExtractionLoader';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
@@ -56,7 +56,7 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
       <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-8 h-8 text-white" />
+            <Target className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">
             Turn Your Ideas Into Action
