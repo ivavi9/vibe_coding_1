@@ -9,7 +9,7 @@ interface Goal {
   metric_type: string;
   current_progress: number;
   target_progress: number;
-  status: 'in_progress' | 'completed' | 'deleted';
+  status: 'active' | 'completed' | 'paused' | 'cancelled';
 }
 
 interface GoalManagementProps {
@@ -26,7 +26,7 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
   onRecoverGoal 
 }) => {
   const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
-  const [activeTab, setActiveTab] = useState<'in_progress' | 'completed' | 'deleted'>('in_progress');
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'cancelled'>('active');
 
   const handleDeleteClick = (goal: Goal) => {
     setGoalToDelete(goal);
@@ -49,8 +49,10 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
     switch (status) {
       case 'completed':
         return 'text-green-600 bg-green-100';
-      case 'deleted':
+      case 'cancelled':
         return 'text-red-600 bg-red-100';
+      case 'paused':
+        return 'text-yellow-600 bg-yellow-100';
       default:
         return 'text-blue-600 bg-blue-100';
     }
@@ -60,17 +62,19 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
     switch (status) {
       case 'completed':
         return <CheckCircle className="w-4 h-4" />;
-      case 'deleted':
+      case 'cancelled':
         return <Trash2 className="w-4 h-4" />;
+      case 'paused':
+        return <X className="w-4 h-4" />;
       default:
         return <ArrowUp className="w-4 h-4" />;
     }
   };
 
   const tabs = [
-    { key: 'in_progress', label: 'In Progress', count: goals.filter(g => g.status === 'in_progress').length },
+    { key: 'active', label: 'Active', count: goals.filter(g => g.status === 'active').length },
     { key: 'completed', label: 'Completed', count: goals.filter(g => g.status === 'completed').length },
-    { key: 'deleted', label: 'Trash', count: goals.filter(g => g.status === 'deleted').length }
+    { key: 'cancelled', label: 'Cancelled', count: goals.filter(g => g.status === 'cancelled').length }
   ];
 
   if (goals.length === 0) {
@@ -117,19 +121,19 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
         {filteredGoals.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              {activeTab === 'in_progress' && <ArrowUp className="w-8 h-8 text-gray-400" />}
+              {activeTab === 'active' && <ArrowUp className="w-8 h-8 text-gray-400" />}
               {activeTab === 'completed' && <CheckCircle className="w-8 h-8 text-gray-400" />}
-              {activeTab === 'deleted' && <Trash2 className="w-8 h-8 text-gray-400" />}
+              {activeTab === 'cancelled' && <Trash2 className="w-8 h-8 text-gray-400" />}
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {activeTab === 'in_progress' && 'No Active Goals'}
+              {activeTab === 'active' && 'No Active Goals'}
               {activeTab === 'completed' && 'No Completed Goals'}
-              {activeTab === 'deleted' && 'Trash is Empty'}
+              {activeTab === 'cancelled' && 'No Cancelled Goals'}
             </h3>
             <p className="text-gray-500">
-              {activeTab === 'in_progress' && 'Start working on your goals to see them here!'}
+              {activeTab === 'active' && 'Start working on your goals to see them here!'}
               {activeTab === 'completed' && 'Complete some goals to see your achievements here!'}
-              {activeTab === 'deleted' && 'Deleted goals will appear here for recovery.'}
+              {activeTab === 'cancelled' && 'Cancelled goals will appear here.'}
             </p>
           </div>
         ) : (
@@ -142,13 +146,13 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
                     <h3 className="font-medium text-gray-900 mb-1">{goal.title}</h3>
                     <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(goal.status)}`}>
                       {getStatusIcon(goal.status)}
-                      <span className="capitalize">{goal.status.replace('_', ' ')}</span>
+                      <span className="capitalize">{goal.status}</span>
                     </div>
                   </div>
                   
                   {/* Action Buttons */}
                   <div className="flex space-x-1">
-                    {goal.status === 'in_progress' && (
+                    {goal.status === 'active' && (
                       <>
                         <button
                           onClick={() => onCompleteGoal(goal.id)}
@@ -160,18 +164,18 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
                         <button
                           onClick={() => handleDeleteClick(goal)}
                           className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                          title="Move to trash"
+                          title="Cancel goal"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </>
                     )}
                     
-                    {goal.status === 'deleted' && (
+                    {goal.status === 'cancelled' && (
                       <button
                         onClick={() => onRecoverGoal(goal.id)}
                         className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
-                        title="Recover goal"
+                        title="Reactivate goal"
                       >
                         <RotateCcw className="w-4 h-4" />
                       </button>
@@ -181,7 +185,7 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
                       <button
                         onClick={() => handleDeleteClick(goal)}
                         className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                        title="Move to trash"
+                        title="Cancel goal"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -191,8 +195,8 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
 
                 <p className="text-gray-600 text-sm mb-3">{goal.description}</p>
 
-                {/* Progress Bar (only for in-progress goals) */}
-                {goal.status === 'in_progress' && (
+                {/* Progress Bar (only for active goals) */}
+                {goal.status === 'active' && (
                   <div className="space-y-2 mb-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Progress</span>
@@ -212,7 +216,7 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
                 )}
 
                 <div className="text-xs text-gray-500">
-                  {goal.metric_type} • {goal.status === 'completed' ? 'Achieved!' : goal.status.replace('_', ' ')}
+                  {goal.metric_type} • {goal.status === 'completed' ? 'Achieved!' : goal.status}
                 </div>
               </div>
             ))}
@@ -223,10 +227,10 @@ const GoalManagement: React.FC<GoalManagementProps> = ({
       {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={!!goalToDelete}
-        title="Move Goal to Trash"
-        message={`Are you sure you want to move "${goalToDelete?.title}" to trash? You can recover it later.`}
-        confirmText="Move to Trash"
-        cancelText="Cancel"
+        title="Cancel Goal"
+        message={`Are you sure you want to cancel "${goalToDelete?.title}"? This will move it to the cancelled goals.`}
+        confirmText="Cancel Goal"
+        cancelText="Keep Active"
         type="warning"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}

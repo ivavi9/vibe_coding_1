@@ -31,6 +31,7 @@ const Goals: React.FC = () => {
   const [showExtractedGoals, setShowExtractedGoals] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [shouldCompleteLoader, setShouldCompleteLoader] = useState(false);
+  const [extractedGoalsRef, setExtractedGoalsRef] = useState<HTMLDivElement | null>(null);
   const { toasts, removeToast, showSuccess } = useToast();
 
   useEffect(() => {
@@ -48,6 +49,21 @@ const Goals: React.FC = () => {
       console.error('Error fetching goals:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const scrollToExtractedGoals = () => {
+    if (extractedGoalsRef) {
+      extractedGoalsRef.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+      
+      // Add a subtle highlight animation
+      extractedGoalsRef.classList.add('animate-pulse', 'ring-2', 'ring-blue-500', 'ring-opacity-50');
+      setTimeout(() => {
+        extractedGoalsRef.classList.remove('animate-pulse', 'ring-2', 'ring-blue-500', 'ring-opacity-50');
+      }, 2000);
     }
   };
 
@@ -73,6 +89,11 @@ const Goals: React.FC = () => {
           setShowExtractedGoals(true);
           setIsExtracting(false);
           setShouldCompleteLoader(false);
+          
+          // Scroll to extracted goals after showing them
+          setTimeout(() => {
+            scrollToExtractedGoals();
+          }, 100);
         }, 800); // Total graceful completion time
       } else {
         alert('No goals extracted. Please try different text.');
@@ -112,6 +133,11 @@ const Goals: React.FC = () => {
           setShowExtractedGoals(true);
           setIsExtracting(false);
           setShouldCompleteLoader(false);
+          
+          // Scroll to extracted goals after showing them
+          setTimeout(() => {
+            scrollToExtractedGoals();
+          }, 100);
         }, 800); // Total graceful completion time
       } else {
         alert('No goals extracted from document. Please try a different file.');
@@ -199,12 +225,14 @@ const Goals: React.FC = () => {
 
         {/* Extracted Goals List */}
         {showExtractedGoals && (
-          <ExtractedGoalsList
-            goals={extractedGoals}
-            onEditGoal={handleEditGoal}
-            onCreateGoal={handleCreateGoal}
-            isLoading={isExtracting}
-          />
+          <div ref={setExtractedGoalsRef} className="transition-all duration-500 ease-out">
+            <ExtractedGoalsList
+              goals={extractedGoals}
+              onEditGoal={handleEditGoal}
+              onCreateGoal={handleCreateGoal}
+              isLoading={isExtracting}
+            />
+          </div>
         )}
 
         {/* Goal Management */}
