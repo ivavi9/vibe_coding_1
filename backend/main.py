@@ -111,10 +111,41 @@ async def extract_goals(request: GoalExtractionRequest, db: Session = Depends(ge
         """
         
         response = model.generate_content(prompt)
-        # Parse the response and extract goals
-        # This is a simplified version - you'll need to parse the JSON response
-        goals = []  # Placeholder for parsed goals
-        return GoalExtractionResponse(goals=goals)
+        
+        # Parse the Gemini response
+        try:
+            import json
+            # Extract the text content from Gemini response
+            response_text = response.text.strip()
+            
+            # Try to find JSON in the response (sometimes Gemini adds extra text)
+            if '[' in response_text and ']' in response_text:
+                start = response_text.find('[')
+                end = response_text.rfind(']') + 1
+                json_text = response_text[start:end]
+                goals_data = json.loads(json_text)
+            else:
+                # If no brackets found, try to parse the entire response
+                goals_data = json.loads(response_text)
+            
+            # Convert the parsed data to our schema format
+            goals = []
+            for goal_data in goals_data:
+                if isinstance(goal_data, dict) and 'title' in goal_data:
+                    goals.append({
+                        "title": goal_data.get("title", ""),
+                        "description": goal_data.get("description", ""),
+                        "metric_type": goal_data.get("metric_type", "Percentage"),
+                        "target_progress": goal_data.get("target_progress", 100)
+                    })
+            
+            return GoalExtractionResponse(goals=goals)
+            
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
+            print(f"Raw response: {response.text}")
+            # Fallback: return empty goals if parsing fails
+            return GoalExtractionResponse(goals=[])
         
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Could not process goals: {str(e)}")
