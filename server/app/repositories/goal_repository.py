@@ -14,27 +14,8 @@ class GoalRepository:
     def __init__(self):
         """Initialize the goal repository with in-memory storage."""
         # In-memory storage for demo purposes (replace with database later)
-        self._goals: List[Dict[str, Any]] = [
-            {
-                "id": "1",
-                "title": "Read 12 books",
-                "description": "Read 12 books this year",
-                "metric_type": "Numeric",
-                "current_progress": 3,
-                "target_progress": 12,
-                "status": "active"
-            },
-            {
-                "id": "2",
-                "title": "Run 100km",
-                "description": "Build endurance and fitness",
-                "metric_type": "Numeric",
-                "current_progress": 15,
-                "target_progress": 100,
-                "status": "active"
-            }
-        ]
-        self._next_id = 3
+        self._goals: List[Dict[str, Any]] = []
+        self._next_id = 1
     
     async def get_all(self) -> List[Dict[str, Any]]:
         """
