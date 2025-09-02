@@ -6,7 +6,6 @@ import { Analytics } from './pages/Analytics'
 import Auth from './pages/Auth'
 import GoogleAuthCallback from './pages/GoogleAuthCallback'
 import { Layout } from './components/Layout'
-import ProtectedRoute from './components/auth/ProtectedRoute'
 import { AuthProvider } from './hooks/useAuth'
 import { Toaster } from './components/ui/Toaster'
 
@@ -18,56 +17,50 @@ function App() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<GoogleAuthCallback />} />
         
-        {/* Protected routes with Layout */}
+        {/* App routes - accessible to all users */}
         <Route
           path="/"
           element={
-            <ProtectedRoute>
-              <Layout>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                  <Dashboard />
-                </motion.div>
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <Dashboard />
+              </motion.div>
+            </Layout>
           }
         />
         <Route
           path="/goals"
           element={
-            <ProtectedRoute>
-              <Layout>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                  <Goals />
-                </motion.div>
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <Goals />
+              </motion.div>
+            </Layout>
           }
         />
         <Route
           path="/analytics"
           element={
-            <ProtectedRoute>
-              <Layout>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                >
-                  <Analytics />
-                </motion.div>
-              </Layout>
-            </ProtectedRoute>
+            <Layout>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <Analytics />
+              </motion.div>
+            </Layout>
           }
         />
       </Routes>

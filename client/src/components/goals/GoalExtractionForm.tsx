@@ -8,13 +8,15 @@ interface GoalExtractionFormProps {
   onFileExtract: (file: File) => void;
   isLoading?: boolean;
   shouldComplete?: boolean;
+  disabled?: boolean;
 }
 
 const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
   onTextExtract,
   onFileExtract,
   isLoading = false,
-  shouldComplete = false
+  shouldComplete = false,
+  disabled = false
 }) => {
   const [textInput, setTextInput] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -51,6 +53,8 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
     }, 100);
   };
 
+
+
   return (
     <>
       <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
@@ -68,7 +72,8 @@ const GoalExtractionForm: React.FC<GoalExtractionFormProps> = ({
           {/* Dream Button */}
           <button
             onClick={scrollToTextSection}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-lg font-medium"
+            disabled={disabled}
+            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             ✨ Dream
           </button>

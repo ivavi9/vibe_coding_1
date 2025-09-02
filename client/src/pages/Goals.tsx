@@ -5,6 +5,8 @@ import {
   GoalManagement
 } from '../components/goals';
 import { useToast } from '../hooks/useToast';
+import { useGuestMode } from '../hooks/useGuestMode';
+import { useAuth } from '../hooks/useAuth';
 import ToastContainer from '../components/ui/ToastContainer';
 
 interface Goal {
@@ -26,29 +28,30 @@ interface ExtractedGoal {
 
 const Goals: React.FC = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
   const [extractedGoals, setExtractedGoals] = useState<ExtractedGoal[]>([]);
   const [showExtractedGoals, setShowExtractedGoals] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const [shouldCompleteLoader, setShouldCompleteLoader] = useState(false);
   const [extractedGoalsRef, setExtractedGoalsRef] = useState<HTMLDivElement | null>(null);
   const { toasts, removeToast, showSuccess, showError, showWarning } = useToast();
+  const { isAuthenticated } = useAuth();
+  const { canExtractGoals, extractionCount, maxExtractions, incrementExtractionCount } = useGuestMode();
 
   useEffect(() => {
-    fetchGoals();
-  }, []);
+    if (isAuthenticated) {
+      fetchGoals();
+    }
+  }, [isAuthenticated]);
 
   const fetchGoals = async () => {
     try {
       const response = await fetch('http://localhost:8000/api/v1/goals');
-      const data = await response.json();
-      if (data.success) {
-        setGoals(data.data);
+      if (response.ok) {
+        const data = await response.json();
+        setGoals(data.goals || []);
       }
     } catch (error) {
       console.error('Error fetching goals:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -58,8 +61,6 @@ const Goals: React.FC = () => {
         behavior: 'smooth',
         block: 'start'
       });
-      
-      // Add a subtle highlight animation
       extractedGoalsRef.classList.add('animate-pulse', 'ring-2', 'ring-blue-500', 'ring-opacity-50');
       setTimeout(() => {
         extractedGoalsRef.classList.remove('animate-pulse', 'ring-2', 'ring-blue-500', 'ring-opacity-50');
@@ -68,40 +69,34 @@ const Goals: React.FC = () => {
   };
 
   const handleTextExtract = async (text: string) => {
+    if (!canExtractGoals) {
+      showWarning('Guest Mode Limit Reached', 'You\'ve reached the limit for goal extraction in guest mode. Sign in to continue extracting goals and save your progress.');
+      return;
+    }
+
     setIsExtracting(true);
     setShouldCompleteLoader(false);
-    
     try {
       const response = await fetch('http://localhost:8000/api/v1/goals/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text })
       });
-      
       const data = await response.json();
-      console.log('Text extraction response:', data); // Debug log
-      
-      // Check if we have goals data (handle different response structures)
+      console.log('Text extraction response:', data);
       const goals = data.goals || data.data?.goals || [];
-      
+
       if (goals && goals.length > 0) {
-        // Signal the loader to complete gracefully
         setShouldCompleteLoader(true);
-        
-        // Wait for graceful completion, then show results
         setTimeout(() => {
           setExtractedGoals(goals);
           setShowExtractedGoals(true);
           setIsExtracting(false);
           setShouldCompleteLoader(false);
-          
-          // Scroll to extracted goals after showing them
-          setTimeout(() => {
-            scrollToExtractedGoals();
-          }, 100);
-        }, 800); // Total graceful completion time
+          incrementExtractionCount();
+          setTimeout(() => { scrollToExtractedGoals(); }, 100);
+        }, 800);
       } else {
-        // No goals extracted - show user-friendly message
         console.log('No goals extracted from text');
         setIsExtracting(false);
         setShouldCompleteLoader(false);
@@ -116,43 +111,36 @@ const Goals: React.FC = () => {
   };
 
   const handleFileExtract = async (file: File) => {
+    if (!canExtractGoals) {
+      showWarning('Guest Mode Limit Reached', 'You\'ve reached the limit for goal extraction in guest mode. Sign in to continue extracting goals and save your progress.');
+      return;
+    }
+
     setIsExtracting(true);
     setShouldCompleteLoader(false);
-    
     const formData = new FormData();
     formData.append('file', file);
     formData.append('description', '');
-    
     try {
       const response = await fetch('http://localhost:8000/api/v1/documents/upload/document', {
         method: 'POST',
         body: formData
       });
-      
       const data = await response.json();
-      console.log('File extraction response:', data); // Debug log
-      
-      // Check if we have goals data (handle different response structures)
+      console.log('File extraction response:', data);
       const goals = data.extracted_goals || data.data?.extracted_goals || data.goals || [];
-      
+
       if (goals && goals.length > 0) {
-        // Signal the loader to complete gracefully
         setShouldCompleteLoader(true);
-        
-        // Wait for graceful completion, then show results
         setTimeout(() => {
           setExtractedGoals(goals);
           setShowExtractedGoals(true);
           setIsExtracting(false);
           setShouldCompleteLoader(false);
-          
-          // Scroll to extracted goals after showing them
-          setTimeout(() => {
-            scrollToExtractedGoals();
-          }, 100);
-        }, 800); // Total graceful completion time
+          incrementExtractionCount();
+          setTimeout(() => { scrollToExtractedGoals(); }, 100);
+        }, 800);
       } else {
-        // No goals extracted - show user-friendly message
         console.log('No goals extracted from document');
         setIsExtracting(false);
         setShouldCompleteLoader(false);
@@ -166,121 +154,155 @@ const Goals: React.FC = () => {
     }
   };
 
-  const handleEditGoal = (index: number, updatedGoal: ExtractedGoal) => {
-    const updatedGoals = [...extractedGoals];
-    updatedGoals[index] = updatedGoal;
-    setExtractedGoals(updatedGoals);
+  const handleEditGoal = (goal: ExtractedGoal) => {
+    // Handle editing extracted goal
+    console.log('Editing goal:', goal);
   };
 
-  const handleCreateGoal = async (goalData: ExtractedGoal) => {
+  const handleCreateGoal = async (goal: ExtractedGoal) => {
+    if (!isAuthenticated) {
+      showWarning('Guest Mode', 'You need to sign in to save goals and track your progress.');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:8000/api/v1/goals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: goalData.title,
-          description: goalData.description,
-          metric_type: goalData.metric_type,
-          target_progress: goalData.target_progress,
+          title: goal.title,
+          description: goal.description,
+          metric_type: goal.metric_type,
+          target_progress: goal.target_progress,
           current_progress: 0
         })
       });
 
       if (response.ok) {
+        showSuccess('Goal Created', 'Your goal has been created successfully!');
         await fetchGoals();
-        // Remove the goal from extracted goals
-        setExtractedGoals(prev => prev.filter(g => g !== goalData));
-        if (extractedGoals.length === 1) {
-          setShowExtractedGoals(false);
-        }
+        setShowExtractedGoals(false);
+        setExtractedGoals([]);
       } else {
-        alert('Failed to create goal. Please try again.');
+        showError('Failed to Create Goal', 'Something went wrong while creating your goal. Please try again.');
       }
     } catch (error) {
       console.error('Error creating goal:', error);
-      alert('Failed to create goal. Please try again.');
+      showError('Failed to Create Goal', 'Something went wrong while creating your goal. Please try again.');
     }
   };
 
   const handleDeleteGoal = async (goalId: string) => {
+    if (!isAuthenticated) {
+      showWarning('Guest Mode', 'You need to sign in to manage goals.');
+      return;
+    }
+
     try {
-      // Use the existing PUT endpoint to update status to 'cancelled'
       const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'cancelled' })
       });
-      
       if (response.ok) {
         await fetchGoals();
         showSuccess('Goal Cancelled', 'The goal has been moved to cancelled goals. You can reactivate it later.');
       } else {
-        alert('Failed to cancel goal. Please try again.');
+        showError('Failed to Cancel Goal', 'Something went wrong. Please try again.');
       }
     } catch (error) {
       console.error('Error cancelling goal:', error);
-      alert('Failed to cancel goal. Please try again.');
+      showError('Failed to Cancel Goal', 'Something went wrong. Please try again.');
     }
   };
 
   const handleCompleteGoal = async (goalId: string) => {
+    if (!isAuthenticated) {
+      showWarning('Guest Mode', 'You need to sign in to manage goals.');
+      return;
+    }
+
     try {
-      // Use the existing PUT endpoint to update status to 'completed'
       const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'completed' })
       });
-      
       if (response.ok) {
         await fetchGoals();
         showSuccess('Goal Completed', 'Congratulations! You have completed this goal.');
       } else {
-        alert('Failed to complete goal. Please try again.');
+        showError('Failed to Complete Goal', 'Something went wrong. Please try again.');
       }
     } catch (error) {
       console.error('Error completing goal:', error);
-      alert('Failed to complete goal. Please try again.');
+      showError('Failed to Complete Goal', 'Something went wrong. Please try again.');
     }
   };
 
   const handleRecoverGoal = async (goalId: string) => {
+    if (!isAuthenticated) {
+      showWarning('Guest Mode', 'You need to sign in to manage goals.');
+      return;
+    }
+
     try {
-      // Use the existing PUT endpoint to update status back to 'active'
       const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'active' })
       });
-      
       if (response.ok) {
         await fetchGoals();
         showSuccess('Goal Reactivated', 'The goal has been restored to your active goals.');
       } else {
-        alert('Failed to reactivate goal. Please try again.');
+        showError('Failed to Reactivate Goal', 'Something went wrong. Please try again.');
       }
     } catch (error) {
       console.error('Error reactivating goal:', error);
-      alert('Failed to reactivate goal. Please try again.');
+      showError('Failed to Reactivate Goal', 'Something went wrong. Please try again.');
     }
   };
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading goals...</div>;
+  // Show loading state
+  if (isExtracting) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Extracting goals...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <>
       <div className="max-w-6xl mx-auto p-6 space-y-8">
-        {/* Goal Extraction Form */}
+        {/* Guest Mode Banner */}
+        {!isAuthenticated && (
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+              <div>
+                <h3 className="text-sm font-medium text-yellow-800">Guest Mode</h3>
+                <p className="text-xs text-yellow-700">
+                  You can extract goals {extractionCount}/{maxExtractions} times. 
+                  {extractionCount >= maxExtractions && ' Sign in to continue extracting goals and save your progress.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <GoalExtractionForm
           onTextExtract={handleTextExtract}
           onFileExtract={handleFileExtract}
           isLoading={isExtracting}
           shouldComplete={shouldCompleteLoader}
+          disabled={!canExtractGoals}
         />
 
-        {/* Extracted Goals List */}
         {showExtractedGoals && (
           <div ref={setExtractedGoalsRef} className="transition-all duration-500 ease-out">
             <ExtractedGoalsList
@@ -292,16 +314,16 @@ const Goals: React.FC = () => {
           </div>
         )}
 
-        {/* Goal Management */}
-        <GoalManagement
-          goals={goals}
-          onDeleteGoal={handleDeleteGoal}
-          onCompleteGoal={handleCompleteGoal}
-          onRecoverGoal={handleRecoverGoal}
-        />
+        {isAuthenticated && (
+          <GoalManagement
+            goals={goals}
+            onDeleteGoal={handleDeleteGoal}
+            onCompleteGoal={handleCompleteGoal}
+            onRecoverGoal={handleRecoverGoal}
+          />
+        )}
       </div>
 
-      {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
     </>
   );

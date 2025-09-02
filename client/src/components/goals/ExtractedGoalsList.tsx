@@ -11,7 +11,7 @@ interface ExtractedGoal {
 
 interface ExtractedGoalsListProps {
   goals: ExtractedGoal[];
-  onEditGoal: (index: number, updatedGoal: ExtractedGoal) => void;
+  onEditGoal: (goal: ExtractedGoal) => void;
   onCreateGoal: (goal: ExtractedGoal) => void;
   isLoading?: boolean;
 }
@@ -30,7 +30,7 @@ const ExtractedGoalsList: React.FC<ExtractedGoalsListProps> = ({
 
   const handleSaveEdit = (updatedGoal: ExtractedGoal) => {
     if (editingIndex !== null) {
-      onEditGoal(editingIndex, updatedGoal);
+      onEditGoal(updatedGoal);
       setEditingIndex(null);
     }
   };
