@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import GoalEditForm from './GoalEditForm';
+import GoalSkeleton from './GoalSkeleton';
 
 interface ExtractedGoal {
   title: string;
@@ -12,12 +13,14 @@ interface ExtractedGoalsListProps {
   goals: ExtractedGoal[];
   onEditGoal: (index: number, updatedGoal: ExtractedGoal) => void;
   onCreateGoal: (goal: ExtractedGoal) => void;
+  isLoading?: boolean;
 }
 
-const ExtractedGoalsList: React.FC<ExtractedGoalsListProps> = ({ 
-  goals, 
-  onEditGoal, 
-  onCreateGoal 
+const ExtractedGoalsList: React.FC<ExtractedGoalsListProps> = ({
+  goals,
+  onEditGoal,
+  onCreateGoal,
+  isLoading = false
 }) => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
@@ -35,6 +38,10 @@ const ExtractedGoalsList: React.FC<ExtractedGoalsListProps> = ({
   const cancelEdit = () => {
     setEditingIndex(null);
   };
+
+  if (isLoading) {
+    return <GoalSkeleton />;
+  }
 
   if (goals.length === 0) {
     return null;

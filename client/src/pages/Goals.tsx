@@ -27,6 +27,7 @@ const Goals: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [extractedGoals, setExtractedGoals] = useState<ExtractedGoal[]>([]);
   const [showExtractedGoals, setShowExtractedGoals] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   useEffect(() => {
     fetchGoals();
@@ -47,13 +48,14 @@ const Goals: React.FC = () => {
   };
 
   const handleTextExtract = async (text: string) => {
+    setIsExtracting(true);
     try {
       const response = await fetch('http://localhost:8000/api/v1/goals/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text })
       });
-
+      
       const data = await response.json();
       if (data.success) {
         setExtractedGoals(data.goals);
@@ -64,20 +66,23 @@ const Goals: React.FC = () => {
     } catch (error) {
       console.error('Error extracting goals:', error);
       alert('Failed to extract goals. Please try again.');
+    } finally {
+      setIsExtracting(false);
     }
   };
 
   const handleFileExtract = async (file: File) => {
+    setIsExtracting(true);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('description', '');
-
+    
     try {
       const response = await fetch('http://localhost:8000/api/v1/documents/upload/document', {
         method: 'POST',
         body: formData
       });
-
+      
       const data = await response.json();
       if (data.success) {
         setExtractedGoals(data.extracted_goals);
@@ -88,6 +93,8 @@ const Goals: React.FC = () => {
     } catch (error) {
       console.error('Error uploading document:', error);
       alert('Failed to upload document. Please try again.');
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -156,6 +163,7 @@ const Goals: React.FC = () => {
       <GoalExtractionForm
         onTextExtract={handleTextExtract}
         onFileExtract={handleFileExtract}
+        isLoading={isExtracting}
       />
 
       {/* Extracted Goals List */}
@@ -164,6 +172,7 @@ const Goals: React.FC = () => {
           goals={extractedGoals}
           onEditGoal={handleEditGoal}
           onCreateGoal={handleCreateGoal}
+          isLoading={isExtracting}
         />
       )}
 
