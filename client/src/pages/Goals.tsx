@@ -34,6 +34,7 @@ const Goals: React.FC = () => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [shouldCompleteLoader, setShouldCompleteLoader] = useState(false);
   const [extractedGoalsRef, setExtractedGoalsRef] = useState<HTMLDivElement | null>(null);
+  const [addedGoals, setAddedGoals] = useState<Set<string>>(new Set()); // Track added goals
   const { toasts, removeToast, showSuccess, showError, showWarning } = useToast();
   const { isAuthenticated } = useAuth();
   const { canExtractGoals, extractionCount, maxExtractions, incrementExtractionCount } = useGuestMode();
@@ -206,8 +207,23 @@ const Goals: React.FC = () => {
         
         showSuccess('Goal Created', 'Your goal has been created successfully!');
         await fetchGoals();
-        setShowExtractedGoals(false);
-        setExtractedGoals([]);
+        
+        // Mark this goal as added
+        const goalKey = `${goal.title}-${goal.description}-${goal.metric_type}-${goal.target_progress}`;
+        setAddedGoals(prev => new Set([...prev, goalKey]));
+        
+        // Remove only the specific goal that was added, not the entire list
+        setExtractedGoals(prevGoals => prevGoals.filter(g => 
+          g.title !== goal.title || 
+          g.description !== goal.description ||
+          g.metric_type !== goal.metric_type ||
+          g.target_progress !== goal.target_progress
+        ));
+        
+        // Only hide extracted goals section if all goals have been added
+        if (extractedGoals.length <= 1) {
+          setShowExtractedGoals(false);
+        }
         
         console.log('Goal created successfully, goals list updated');
       } else {
@@ -366,6 +382,7 @@ const Goals: React.FC = () => {
               onEditGoal={handleEditGoal}
               onCreateGoal={handleCreateGoal}
               isLoading={isExtracting}
+              addedGoals={addedGoals}
             />
           </div>
         )}
