@@ -56,7 +56,7 @@ const Goals: React.FC = () => {
   const fetchGoals = async () => {
     try {
       console.log('Fetching goals from backend...');
-      const response = await fetch('http://localhost:8000/api/v1/goals/');
+      const response = await fetch('http://localhost:8001/api/v1/goals/');
       console.log('Goals API response status:', response.status);
       if (response.ok) {
         const data = await response.json();
@@ -96,7 +96,7 @@ const Goals: React.FC = () => {
     setIsExtracting(true);
     setShouldCompleteLoader(false);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/goals/extract', {
+      const response = await fetch('http://localhost:8001/api/v1/goals/extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text })
@@ -252,7 +252,7 @@ const Goals: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}/`, {
+      const response = await fetch(`http://localhost:8001/api/v1/goals/${goalId}/`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'cancelled' })
@@ -276,7 +276,7 @@ const Goals: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}/`, {
+      const response = await fetch(`http://localhost:8001/api/v1/goals/${goalId}/`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'completed' })
@@ -300,7 +300,7 @@ const Goals: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/goals/${goalId}`, {
+      const response = await fetch(`http://localhost:8001/api/v1/goals/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'active' })

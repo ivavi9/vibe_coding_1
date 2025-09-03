@@ -4,10 +4,14 @@ Goals endpoints for the Clarity API.
 This module handles goal creation, retrieval, updating, and deletion.
 """
 
+import logging
 from fastapi import APIRouter, HTTPException, status
 from typing import List
 from app.schemas.goals import GoalCreate, GoalUpdate, GoalResponse
 from app.services.goals import GoalService
+from app.services.ai_service import ai_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -76,10 +80,39 @@ async def delete_goal(
     return {"message": "Goal deleted successfully"}
 
 
-@router.post("/extract-from-text")
+@router.post("/extract")
 async def extract_goals_from_text(
-    text: str
+    request: dict
 ):
     """Extract goals from text using AI."""
-    # Implementation will be added later
-    pass
+    try:
+        text = request.get("text", "").strip()
+        if not text or len(text) < 10:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Text must be at least 10 characters long"
+            )
+        
+        # Use AI service to extract goals
+        goals = await ai_service.extract_goals_from_text(text)
+        
+        if not goals:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="No goals could be extracted from the provided text"
+            )
+        
+        return {
+            "goals": goals,
+            "count": len(goals),
+            "message": f"Successfully extracted {len(goals)} goals"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error extracting goals: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to extract goals. Please try again."
+        )
