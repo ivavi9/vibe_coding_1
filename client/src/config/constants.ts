@@ -15,7 +15,7 @@ export const API_CONFIG = {
   // API Endpoints
   ENDPOINTS: {
     // Goals
-    GOALS: '/api/v1/goals',
+    GOALS: '/api/v1/goals/',
     GOALS_EXTRACT: '/api/v1/goals/extract',
     
     // Authentication

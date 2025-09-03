@@ -73,11 +73,25 @@ temp_*
 *.tmp
 *.temp
 
-# Test files
+# Test files and results
 test.db
 .pytest_cache/
 .coverage
 htmlcov/
+test-results/
+*.pid
+*.log
+
+# Development artifacts
+utils/pids/
+client/test-results/
+client/coverage/
+client/htmlcov/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Backup files
 *.bak

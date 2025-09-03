@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id'
 const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
-import { API_CONFIG, GOOGLE_CONFIG, buildApiUrl } from '../config/constants';
+import { API_CONFIG, buildApiUrl } from '../config/constants';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -130,12 +130,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Add state to URL
       const authUrl = `${googleAuthUrl}&state=${state}`
       
-      // Open Google OAuth popup
+      // Open Google OAuth popup with secure configuration
       const popup = window.open(
         authUrl,
         'google-oauth',
-        'width=500,height=600,scrollbars=yes,resizable=yes'
+        'width=500,height=600,scrollbars=no,resizable=no,menubar=no,toolbar=no,location=no,status=no'
       )
+
+      // Check if popup was blocked or failed to open
+      if (!popup) {
+        throw new Error('Popup was blocked. Please allow popups for this site.')
+      }
 
       // Listen for OAuth callback
       const handleMessage = async (event: MessageEvent) => {
@@ -162,14 +167,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       window.addEventListener('message', handleMessage)
 
-      // Fallback: check for URL changes (for mobile/redirect flow)
-      const checkUrl = setInterval(() => {
-        if (popup?.closed) {
-          clearInterval(checkUrl)
+      // Fallback: check for popup closure (with COOP-safe approach)
+      const checkPopupClosed = setInterval(() => {
+        try {
+          // Use a try-catch to handle COOP errors gracefully
+          if (popup && popup.closed) {
+            clearInterval(checkPopupClosed)
+            window.removeEventListener('message', handleMessage)
+            setIsGoogleLoading(false)
+          }
+        } catch (error) {
+          // COOP error - popup is likely from different origin
+          // Clear interval and clean up without accessing popup properties
+          clearInterval(checkPopupClosed)
           window.removeEventListener('message', handleMessage)
           setIsGoogleLoading(false)
         }
       }, 1000)
+
+      // Set a timeout to clean up if popup doesn't close within reasonable time
+      setTimeout(() => {
+        clearInterval(checkPopupClosed)
+        window.removeEventListener('message', handleMessage)
+        setIsGoogleLoading(false)
+      }, 300000) // 5 minutes timeout
 
     } catch (error) {
       console.error('Google login failed:', error)

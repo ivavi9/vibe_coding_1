@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
+import { useGoalContext } from '../contexts/GoalContext';
 import { API_CONFIG, buildApiUrl } from '../config/constants';
 
 interface Goal {
@@ -21,7 +22,7 @@ interface ProgressEntry {
 }
 
 const Dashboard: React.FC = () => {
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const { goals, isLoading: goalsLoading } = useGoalContext();
   const [progressHistory, setProgressHistory] = useState<ProgressEntry[]>([]);
   const [progressInput, setProgressInput] = useState('');
   const [selectedGoalId, setSelectedGoalId] = useState('');
@@ -29,21 +30,10 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchGoals();
     fetchProgressHistory();
   }, []);
 
-  const fetchGoals = async () => {
-    try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.GOALS));
-      const data = await response.json();
-      if (data.success) {
-        setGoals(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching goals:', error);
-    }
-  };
+  // Goals are now managed by GoalContext
 
   const fetchProgressHistory = async () => {
     try {
@@ -77,7 +67,6 @@ const Dashboard: React.FC = () => {
         setProgressInput('');
         setProgressValue(1);
         setSelectedGoalId('');
-        await fetchGoals();
         await fetchProgressHistory();
       }
     } catch (error) {
@@ -89,7 +78,7 @@ const Dashboard: React.FC = () => {
   const getCompletedGoalsCount = () => goals.filter(goal => goal.current_progress >= goal.target_progress).length;
   const getProgressUpdatesCount = () => progressHistory.length;
 
-  if (loading) {
+  if (loading || goalsLoading) {
     return <div className="flex justify-center items-center h-64">Loading dashboard...</div>;
   }
 

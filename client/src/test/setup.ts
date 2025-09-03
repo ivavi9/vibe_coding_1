@@ -9,12 +9,12 @@ import { vi } from 'vitest'
 // Mock environment variables
 vi.mock('import.meta.env', () => ({
   env: {
-    DEV: true,
-    PROD: false,
     VITE_API_URL: 'http://localhost:8001',
     VITE_FRONTEND_URL: 'http://localhost:3000',
-    VITE_GOOGLE_CLIENT_ID: 'test-google-client-id',
-    VITE_GOOGLE_REDIRECT_URI: 'http://localhost:3000/auth/callback'
+    VITE_GOOGLE_CLIENT_ID: 'test-client-id',
+    VITE_GOOGLE_REDIRECT_URI: 'http://localhost:3000/auth/callback',
+    DEV: true,
+    PROD: false
   }
 }))
 
@@ -26,22 +26,22 @@ const localStorageMock = {
   getItem: vi.fn(),
   setItem: vi.fn(),
   removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn()
+  clear: vi.fn()
 }
-global.localStorage = localStorageMock
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock
+})
 
 // Mock sessionStorage
 const sessionStorageMock = {
   getItem: vi.fn(),
   setItem: vi.fn(),
   removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn()
+  clear: vi.fn()
 }
-global.sessionStorage = sessionStorageMock
+Object.defineProperty(window, 'sessionStorage', {
+  value: sessionStorageMock
+})
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -72,84 +72,48 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }))
 
-// Mock scrollIntoView
+// Mock Element.prototype.scrollIntoView
 Element.prototype.scrollIntoView = vi.fn()
 
-// Mock getBoundingClientRect
+// Mock Element.prototype.getBoundingClientRect
 Element.prototype.getBoundingClientRect = vi.fn(() => ({
-  width: 100,
-  height: 100,
+  width: 120,
+  height: 120,
   top: 0,
   left: 0,
-  bottom: 100,
-  right: 100,
+  bottom: 0,
+  right: 0,
   x: 0,
   y: 0,
   toJSON: () => {}
 }))
 
-// Mock console methods in tests to reduce noise
-const originalConsoleError = console.error
-const originalConsoleWarn = console.warn
-
-beforeEach(() => {
-  // Reset all mocks before each test
-  vi.clearAllMocks()
-  
-  // Reset fetch mock
-  if (global.fetch) {
-    (global.fetch as any).mockReset()
-  }
-  
-  // Reset localStorage mock
-  localStorageMock.getItem.mockReset()
-  localStorageMock.setItem.mockReset()
-  localStorageMock.removeItem.mockReset()
-  localStorageMock.clear.mockReset()
-  
-  // Reset sessionStorage mock
-  sessionStorageMock.getItem.mockReset()
-  sessionStorageMock.setItem.mockReset()
-  sessionStorageMock.removeItem.mockReset()
-  sessionStorageMock.clear.mockReset()
-  
-  // Suppress console errors and warnings in tests unless explicitly needed
-  console.error = vi.fn()
-  console.warn = vi.fn()
-})
-
-afterEach(() => {
-  // Restore console methods
-  console.error = originalConsoleError
-  console.warn = originalConsoleWarn
-})
+// Mock console methods to reduce noise in tests
+const originalConsole = { ...console }
+console.log = vi.fn()
+console.warn = vi.fn()
+console.error = vi.fn()
 
 // Global test utilities
-export const mockApiResponse = (data: any, status = 200) => {
+declare global {
+  var mockApiResponse: (data: any, status?: number) => Promise<Response>
+  var mockApiError: (status: number, message: string) => Promise<Response>
+}
+
+global.mockApiResponse = (data: any, status = 200) => {
   return Promise.resolve({
     ok: status >= 200 && status < 300,
     status,
     json: () => Promise.resolve(data),
     text: () => Promise.resolve(JSON.stringify(data)),
-    headers: new Headers(),
-  })
+  } as Response)
 }
 
-export const mockApiError = (status = 500, message = 'Internal Server Error') => {
+global.mockApiError = (status: number, message: string) => {
   return Promise.resolve({
     ok: false,
     status,
-    json: () => Promise.resolve({ error: message }),
+    json: () => Promise.resolve({ detail: message }),
     text: () => Promise.resolve(message),
-    headers: new Headers(),
-  })
-}
-
-export const mockFetch = (responses: Array<{ data: any; status?: number }>) => {
-  let callCount = 0
-  return vi.fn().mockImplementation(() => {
-    const response = responses[callCount] || responses[responses.length - 1]
-    callCount++
-    return mockApiResponse(response.data, response.status)
-  })
+  } as Response)
 }

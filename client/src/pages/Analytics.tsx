@@ -1,7 +1,19 @@
 import { motion } from 'framer-motion'
 import { BarChart3, TrendingUp, Calendar, Target } from 'lucide-react'
+import { useGoalContext } from '../contexts/GoalContext'
 
 export function Analytics() {
+  const { goals, isLoading } = useGoalContext();
+  
+  // Calculate analytics data
+  const totalGoals = goals.length;
+  const activeGoals = goals.filter(goal => goal.status === 'active').length;
+  const completedGoals = goals.filter(goal => goal.status === 'completed').length;
+  const updatesThisMonth = goals.filter(goal => {
+    // This is a placeholder - in a real app you'd track actual update timestamps
+    return goal.current_progress > 0;
+  }).length;
+
   return (
     <motion.div
       className="space-y-6"
@@ -27,22 +39,22 @@ export function Analytics() {
       >
         <div className="card text-center">
           <Target className="w-8 h-8 text-accent mx-auto mb-2" />
-          <h3 className="text-2xl font-bold">0</h3>
+          <h3 className="text-2xl font-bold">{isLoading ? '...' : totalGoals}</h3>
           <p className="caption-text">Total Goals</p>
         </div>
         <div className="card text-center">
           <TrendingUp className="w-8 h-8 text-green-500 mx-auto mb-2" />
-          <h3 className="text-2xl font-bold">0</h3>
+          <h3 className="text-2xl font-bold">{isLoading ? '...' : activeGoals}</h3>
           <p className="caption-text">Active Goals</p>
         </div>
         <div className="card text-center">
           <BarChart3 className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-          <h3 className="text-2xl font-bold">0</h3>
+          <h3 className="text-2xl font-bold">{isLoading ? '...' : completedGoals}</h3>
           <p className="caption-text">Completed</p>
         </div>
         <div className="card text-center">
           <Calendar className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-          <h3 className="text-2xl font-bold">0</h3>
+          <h3 className="text-2xl font-bold">{isLoading ? '...' : updatesThisMonth}</h3>
           <p className="caption-text">Updates This Month</p>
         </div>
       </motion.div>

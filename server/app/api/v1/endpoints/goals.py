@@ -24,8 +24,12 @@ async def create_goal(
     goal_service = GoalService()
     try:
         goal = await goal_service.create_goal(goal_data)
-        # Return the goal data directly
-        return goal
+        # Return consistent response structure
+        return {
+            "success": True,
+            "data": goal,
+            "message": "Goal created successfully"
+        }
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -38,8 +42,12 @@ async def get_goals():
     """Get all goals for the current user."""
     goal_service = GoalService()
     goals = await goal_service.get_goals()
-    # Return the goals data directly
-    return goals
+    # Return consistent response structure
+    return {
+        "success": True,
+        "data": goals,
+        "message": "Goals retrieved successfully"
+    }
 
 
 @router.get("/{goal_id}")

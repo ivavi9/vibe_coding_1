@@ -15,13 +15,13 @@
 # 🚫 NEVER start servers manually - always use the test-driven workflow!
 
 # Run tests only (recommended for development)
-./scripts/run-tests.sh
+./utils/scripts/run-tests.sh
 
 # Full workflow: tests + start servers (recommended for feature testing)
-./scripts/test-and-start.sh
+./utils/scripts/test-and-start.sh
 
 # Stop development servers
-./scripts/stop-servers.sh
+./utils/scripts/stop-servers.sh
 ```
 
 ## 🏗️ **ARCHITECTURE OVERVIEW**
@@ -51,6 +51,48 @@
 - 🔄 **Every feature change must pass regression tests**
 - 📚 **Refer to entry point documentation before starting**
 
+## 🧩 **MODULARIZATION GUIDELINES**
+
+### **File Size Limits**
+- **Maximum file size**: 200 lines
+- **Target file size**: 100-150 lines
+- **If file exceeds limit**: Break into smaller components/hooks
+
+### **SOLID Principles**
+- **Single Responsibility**: Each file should have one clear purpose
+- **Open/Closed**: Extend functionality through composition, not modification
+- **Liskov Substitution**: Components should be interchangeable
+- **Interface Segregation**: Keep interfaces focused and minimal
+- **Dependency Inversion**: Depend on abstractions, not concretions
+
+### **Component Structure**
+```
+src/
+├── components/
+│   ├── goals/
+│   │   ├── GoalStateManager.tsx      # Custom hook for goal state
+│   │   ├── GoalExtractionManager.tsx # Custom hook for extraction
+│   │   ├── AuthenticationBanners.tsx # UI component for auth banners
+│   │   └── index.ts                  # Export all components
+│   └── ui/                           # Reusable UI components
+├── hooks/                            # Custom React hooks
+├── pages/                            # Page components (keep minimal)
+└── config/                           # Centralized configuration
+```
+
+### **When to Create New Files**
+- ✅ **New feature**: Create new component/hook file
+- ✅ **File > 200 lines**: Break into smaller files
+- ✅ **Multiple responsibilities**: Split into focused files
+- ✅ **Reusable logic**: Extract into custom hooks
+- ❌ **Minor updates**: Modify existing file if < 200 lines
+
+### **Naming Conventions**
+- **Components**: PascalCase (e.g., `GoalStateManager.tsx`)
+- **Hooks**: camelCase with `use` prefix (e.g., `useGoalState.ts`)
+- **Utilities**: camelCase (e.g., `buildApiUrl.ts`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `API_ENDPOINTS`)
+
 ---
 
-**Happy coding! Remember: Tests First, Servers Second! 🧪✨**
+**Happy coding! Remember: Tests First, Servers Second, Modularity Always! 🧪✨**
