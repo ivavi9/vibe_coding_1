@@ -82,27 +82,33 @@
 ## 🧪 **TESTING REQUIREMENTS (MANDATORY)**
 
 ### **Test Organization Structure**
-The project has **3 distinct test layers** that work together:
+The project has **3 distinct test layers** that work together, **ALL centralized in one location**:
 
-#### **1. 🧩 Component Tests (Client-Level)**
-- **Location**: `client/src/**/__tests__/`
+#### **1. 🧩 Component Tests (Frontend-Level)**
+- **Location**: `tests/frontend/` (centralized)
 - **Purpose**: Test individual React components, hooks, and utilities
-- **Command**: `cd client && npm test`
+- **Command**: `./tests/run-all-tests.sh` (unified runner)
 - **Coverage Target**: 80% of all frontend components
 - **Examples**: Goals.test.tsx, Dashboard.test.tsx, useAuth.test.tsx
 
 #### **2. 🔗 Integration Tests (Root-Level)**
-- **Location**: `tests/` (root directory)
+- **Location**: `tests/functional/` + `tests/regression/` (centralized)
 - **Purpose**: Test cross-component integration, user journeys, and end-to-end flows
-- **Command**: `cd client && npm test -- ../tests/`
+- **Command**: `./tests/run-all-tests.sh` (unified runner)
 - **Coverage Target**: 100% of user workflows
 - **Examples**: goals-user-journeys.test.ts, features.test.ts
 
 #### **3. ⚙️ Backend Tests (Server-Level)**
-- **Location**: `server/tests/`
+- **Location**: `tests/backend/` (centralized)
 - **Purpose**: Test backend services, API endpoints, and business logic
-- **Command**: `cd server && python -m pytest tests/`
+- **Command**: `./tests/run-all-tests.sh` (unified runner)
 - **Coverage Target**: 100% of backend functionality
+
+#### **4. 🎯 Unified Test Structure**
+- **Single Location**: **ALL tests are now in `/tests/` directory**
+- **Unified Runner**: `./tests/run-all-tests.sh` executes all 91 tests
+- **No More Scattered Tests**: Component tests moved from `client/src/**/__tests__/`
+- **Guaranteed Coverage**: All tests run before servers start
 
 ### **Feature Testing Rules**
 - ✅ **Every new feature MUST have functional tests** that mimic real-life user behavior
@@ -134,16 +140,13 @@ The project has **3 distinct test layers** that work together:
 ### **Running All Tests**
 ```bash
 # 🚀 Run ALL tests (recommended workflow)
+./tests/run-all-tests.sh
+
+# 🚀 Run ALL tests via utility scripts
 ./utils/scripts/run-tests.sh
 
-# 🧩 Run only component tests
-cd client && npm test
-
-# 🔗 Run only integration tests  
-cd client && npm test -- ../tests/
-
-# ⚙️ Run only backend tests
-cd server && python -m pytest tests/
+# 🚀 Run tests before starting servers
+./utils/scripts/test-and-start.sh
 
 # 📊 Run tests with coverage
 cd client && npm run test:coverage
@@ -158,27 +161,32 @@ cd client && npm run test:coverage
 ### **Test Organization Diagram**
 ```
 progress_tracker/
-├── 🧩 client/src/**/__tests__/     # Component Tests
-│   ├── pages/__tests__/
-│   │   ├── Goals.test.tsx          # Goals page component
-│   │   ├── Dashboard.test.tsx      # Dashboard page component
-│   │   └── Analytics.test.tsx      # Analytics page component
-│   ├── components/__tests__/
-│   │   ├── Layout.test.tsx         # Layout component
-│   │   └── ui/__tests__/           # UI component tests
-│   └── hooks/__tests__/
-│       └── useAuth.test.tsx        # Authentication hook
-├── 🔗 tests/                       # Integration Tests (Root)
-│   ├── functional/                 # User workflow tests
+├── 🧪 tests/                       # 🎯 UNIFIED TEST DIRECTORY
+│   ├── README.md                   # Test documentation
+│   ├── run-all-tests.sh            # Unified test runner
+│   ├── vitest.config.ts            # Frontend test config
+│   ├── setup.ts                    # Frontend test setup
+│   ├── 🧩 frontend/                # Frontend Component Tests
+│   │   ├── components/             # Component tests
+│   │   │   └── Layout.test.tsx     # Layout component
+│   │   ├── pages/                  # Page tests
+│   │   │   ├── Goals.test.tsx      # Goals page component
+│   │   │   └── Dashboard.test.tsx  # Dashboard page component
+│   │   ├── hooks/                  # Hook tests
+│   │   │   └── useAuth.test.tsx    # Authentication hook
+│   │   └── contexts/               # Context tests
+│   ├── 🔗 functional/              # Functional Integration Tests
 │   │   ├── goals-user-journeys.test.ts
 │   │   ├── user-journeys.test.ts
 │   │   └── basic-integration.test.ts
-│   └── regression/                 # Regression tests
-│       └── features.test.ts
-└── ⚙️ server/tests/                # Backend Tests
-    ├── test_goals.py               # Goal service tests
-    ├── unit/                       # Unit tests
-    └── integration/                # Backend integration tests
+│   ├── 🔗 regression/              # Regression Tests
+│   │   └── features.test.ts
+│   └── ⚙️ backend/                 # Backend Tests
+│       ├── unit/                   # Unit tests
+│       │   └── test_goals.py       # Goal service tests
+│       └── integration/            # Integration tests
+├── 🚫 client/src/**/__tests__/     # ❌ OLD LOCATION (MOVED)
+└── 🚫 server/tests/                # ❌ OLD LOCATION (MOVED)
 ```
 
 ### **Test Relationship**

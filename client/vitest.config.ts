@@ -22,15 +22,19 @@ export default defineConfig({
         '**/dist/**',
         '**/.{idea,git,cache,output,temp}/**',
         '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-        '**/*.{test,spec}.{js,ts,jsx,tsx}',
         '**/*.stories.{js,ts,jsx,tsx}',
         '**/*.config.{js,ts,jsx,tsx}',
         '**/index.{js,ts,jsx,tsx}',
         '**/main.{js,ts,jsx,tsx}',
         '**/App.{js,ts,jsx,tsx}',
         '**/vite-env.d.ts'
-      ]
+      ],
+    include: [
+      'src/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      'src/tests/**/*.test.ts'
+    ],
     },
+
     reporters: ['verbose', 'html'],
     outputFile: {
       html: './test-results/index.html'

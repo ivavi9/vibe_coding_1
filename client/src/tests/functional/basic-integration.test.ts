@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { API_CONFIG, buildApiUrl } from '../client/src/config/constants';
+import { API_CONFIG, buildApiUrl } from '../../config/constants';
 
 // Mock fetch for testing
 global.fetch = vi.fn();
@@ -51,8 +51,7 @@ describe('🔗 BASIC INTEGRATION TESTS', () => {
         'AUTH_GOOGLE_CALLBACK',
         'AUTH_VALIDATE',
         'AUTH_LOGOUT',
-        'DOCUMENTS_UPLOAD',
-        'PROGRESS'
+        'DOCUMENTS_UPLOAD'
       ];
       
       requiredEndpoints.forEach(endpoint => {

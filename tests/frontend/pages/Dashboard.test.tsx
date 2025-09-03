@@ -68,14 +68,14 @@ describe('📊 Dashboard Page Component', () => {
   describe('📱 Component Rendering', () => {
     it('should render without crashing', () => {
       renderWithRouter(<Dashboard />);
-      expect(screen.getByRole('heading', { name: 'Track Progress' })).toBeInTheDocument();
+      expect(screen.getByText('Track Progress')).toBeInTheDocument();
     });
 
     it('should display all main sections', () => {
       renderWithRouter(<Dashboard />);
-      expect(screen.getByRole('heading', { name: 'Track Progress' })).toBeInTheDocument();
+      expect(screen.getByText('Quick Stats')).toBeInTheDocument();
+      expect(screen.getByText('Track Progress')).toBeInTheDocument();
       expect(screen.getByText('Recent Goals')).toBeInTheDocument();
-      // Note: Quick Stats is a comment, not rendered text
     });
   });
 
@@ -131,14 +131,10 @@ describe('📊 Dashboard Page Component', () => {
       
       fireEvent.click(dropdown);
       
-      // Check dropdown options specifically (use getAllByText to handle duplicates)
-      const goal1Elements = screen.getAllByText('Test Goal 1');
-      const goal2Elements = screen.getAllByText('Test Goal 2');
-      const goal3Elements = screen.getAllByText('Test Goal 3');
-      expect(goal1Elements.length).toBeGreaterThan(0);
-      expect(goal2Elements.length).toBeGreaterThan(0);
-      expect(goal3Elements.length).toBeGreaterThan(0);
-      // Note: All goals appear in dropdown, but only active ones should be selectable
+      expect(screen.getByText('Test Goal 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Goal 3')).toBeInTheDocument();
+      // Completed goals should not appear in dropdown
+      expect(screen.queryByText('Test Goal 2')).not.toBeInTheDocument();
     });
 
     it('should show goal details when selected', async () => {
@@ -189,41 +185,38 @@ describe('📊 Dashboard Page Component', () => {
     it('should show goals with proper information', () => {
       renderWithRouter(<Dashboard />);
       
-      // Check if goals are displayed (use more specific selectors)
-      expect(screen.getByRole('heading', { name: 'Test Goal 1' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: 'Test Goal 2' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: 'Test Goal 3' })).toBeInTheDocument();
+      // Check if goals are displayed
+      expect(screen.getByText('Test Goal 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Goal 2')).toBeInTheDocument();
+      expect(screen.getByText('Test Goal 3')).toBeInTheDocument();
     });
 
     it('should display goal progress bars for active goals', () => {
       renderWithRouter(<Dashboard />);
       
-      // Active goals should show progress (check parent containers)
-      const goal1Container = screen.getByRole('heading', { name: 'Test Goal 1' }).closest('.p-4');
-      const goal3Container = screen.getByRole('heading', { name: 'Test Goal 3' }).closest('.p-4');
-      expect(goal1Container).toHaveTextContent('5 / 10');
-      expect(goal3Container).toHaveTextContent('0 / 100');
+      // Active goals should show progress
+      expect(screen.getByText('5/10')).toBeInTheDocument(); // Goal 1
+      expect(screen.getByText('0/100')).toBeInTheDocument(); // Goal 3
     });
 
     it('should show completed status for finished goals', () => {
       renderWithRouter(<Dashboard />);
       
-      // Completed goal should show completion status (check parent container)
-      const goal2Container = screen.getByRole('heading', { name: 'Test Goal 2' }).closest('.p-4');
-      expect(goal2Container).toHaveTextContent('1 / 1');
+      // Completed goal should show completion status
+      expect(screen.getByText('1/1')).toBeInTheDocument(); // Goal 2
     });
   });
 
   describe('🎨 UI Component Integration', () => {
     it('should have proper container structure', () => {
       renderWithRouter(<Dashboard />);
-      const container = screen.getByRole('heading', { name: 'Track Progress' }).closest('.max-w-6xl');
+      const container = screen.getByText('Track Progress').closest('.max-w-6xl');
       expect(container).toBeInTheDocument();
     });
 
     it('should have proper spacing between sections', () => {
       renderWithRouter(<Dashboard />);
-      const container = screen.getByRole('heading', { name: 'Track Progress' }).closest('.space-y-8');
+      const container = screen.getByText('Track Progress').closest('.space-y-8');
       expect(container).toBeInTheDocument();
     });
 
@@ -251,10 +244,10 @@ describe('📊 Dashboard Page Component', () => {
     it('should display goals for authenticated users', () => {
       renderWithRouter(<Dashboard />);
       
-      // Should show user's goals (use more specific selectors to avoid duplicates)
-      expect(screen.getByRole('heading', { name: 'Test Goal 1' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: 'Test Goal 2' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: 'Test Goal 3' })).toBeInTheDocument();
+      // Should show user's goals
+      expect(screen.getByText('Test Goal 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Goal 2')).toBeInTheDocument();
+      expect(screen.getByText('Test Goal 3')).toBeInTheDocument();
     });
 
     it('should show proper goal counts based on status', () => {
@@ -280,9 +273,9 @@ describe('📊 Dashboard Page Component', () => {
       renderWithRouter(<Dashboard />);
       
       // All content should be visible immediately
-      expect(screen.getByRole('heading', { name: 'Track Progress' })).toBeInTheDocument();
+      expect(screen.getByText('Quick Stats')).toBeInTheDocument();
+      expect(screen.getByText('Track Progress')).toBeInTheDocument();
       expect(screen.getByText('Recent Goals')).toBeInTheDocument();
-      // Note: Quick Stats is a comment, not rendered text
     });
   });
 });

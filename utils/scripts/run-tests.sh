@@ -62,66 +62,22 @@ install_dependencies() {
     cd ..
 }
 
-# Function to run backend tests
-run_backend_tests() {
-    print_status "🧪 Running backend tests..."
+# Function to run all tests using unified runner
+run_all_tests() {
+    print_status "🧪 Running ALL tests using unified test runner..."
     
-    print_status "Running backend unit tests..."
-    cd server
-    source venv/bin/activate
-    python -m pytest tests/ -v --tb=short
-    if [ $? -eq 0 ]; then
-        print_success "Backend tests passed"
-    else
-        print_error "Backend tests failed"
-        exit 1
-    fi
-    cd ..
-}
-
-# Function to run frontend tests
-run_frontend_tests() {
-    print_status "🧪 Running frontend tests..."
-    
-    cd client
-    npm test -- --run --silent
-    if [ $? -eq 0 ]; then
-        print_success "Frontend tests passed"
-    else
-        print_error "Frontend tests failed"
-        exit 1
-    fi
-    cd ..
-}
-
-# Function to run integration tests
-run_integration_tests() {
-    print_status "🧪 Running integration tests..."
-    
-    if [ -f "tests/functional/basic-integration.test.ts" ]; then
-        print_status "Running functional integration tests..."
-        cd client
-        npm test -- ../tests/functional/ --run --reporter=verbose
+    # Use the centralized test runner
+    if [ -f "tests/run-all-tests.sh" ]; then
+        ./tests/run-all-tests.sh
         if [ $? -eq 0 ]; then
-            print_success "Functional integration tests passed"
+            print_success "All tests completed successfully"
         else
-            print_error "Functional integration tests failed"
+            print_error "Tests failed"
             exit 1
         fi
-        
-        print_status "Running regression tests..."
-        npm test -- ../tests/regression/ --run --reporter=verbose
-        if [ $? -eq 0 ]; then
-            print_success "Regression tests passed"
-        else
-            print_error "Regression tests failed"
-            exit 1
-        fi
-        
-        cd ..
-        print_success "All integration tests passed"
     else
-        print_warning "No integration tests found, skipping..."
+        print_error "Unified test runner not found at tests/run-all-tests.sh"
+        exit 1
     fi
 }
 
@@ -135,9 +91,15 @@ display_test_summary() {
     echo -e "✅ Integration tests: PASSED"
     echo ""
     echo -e "${GREEN}🧪 Test Coverage:${NC}"
-    echo -e "🧩 Component Tests: client/src/**/__tests__/"
-    echo -e "🔗 Integration Tests: tests/ (root directory)"
-    echo -e "⚙️ Backend Tests: server/tests/"
+    echo -e "🧩 Component Tests: tests/frontend/"
+    echo -e "🔗 Integration Tests: tests/functional/ + tests/regression/"
+    echo -e "⚙️ Backend Tests: tests/backend/"
+    echo ""
+    echo -e "${GREEN}📁 Unified Test Structure:${NC}"
+    echo -e "📂 All tests are now centralized in: tests/"
+    echo -e "🎯 Frontend: tests/frontend/"
+    echo -e "🔧 Backend: tests/backend/"
+    echo -e "🔗 Integration: tests/functional/ + tests/regression/"
     echo ""
     echo -e "${YELLOW}🚀 To start development servers, run:${NC}"
     echo -e "  ${GREEN}./utils/scripts/test-and-start.sh${NC}"
@@ -150,9 +112,7 @@ display_test_summary() {
 main() {
     validate_project
     install_dependencies
-    run_backend_tests
-    run_frontend_tests
-    run_integration_tests
+    run_all_tests
     display_test_summary
 }
 

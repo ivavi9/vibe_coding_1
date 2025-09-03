@@ -173,8 +173,13 @@ vi.mock('../../components/ui/ToastContainer', () => ({
   )
 }));
 
-// Mock the goals components - REMOVED CONFLICTING MOCK
-// Individual component mocks are defined above with proper test IDs
+// Mock the goals components
+vi.mock('../../components/goals', () => ({
+  GoalExtractionForm: vi.fn(),
+  ExtractedGoalsList: vi.fn(),
+  GoalManagement: vi.fn(),
+  AuthenticationBanners: vi.fn()
+}));
 
 const renderWithRouter = (component: React.ReactElement) => {
   return render(

@@ -74,34 +74,21 @@ install_dependencies() {
 
 # Function to run tests
 run_tests() {
-    print_status "🧪 Running backend tests..."
+    print_status "🧪 Running ALL tests using unified test runner..."
     
-    print_status "Running backend unit tests..."
-    cd server
-    source venv/bin/activate
-    python -m pytest tests/ -v --tb=short
-    if [ $? -eq 0 ]; then
-        print_success "Backend tests passed"
+    # Use the centralized test runner
+    if [ -f "tests/run-all-tests.sh" ]; then
+        ./tests/run-all-tests.sh
+        if [ $? -eq 0 ]; then
+            print_success "🎉 All tests passed! Starting development servers..."
+        else
+            print_error "Tests failed - cannot start servers"
+            exit 1
+        fi
     else
-        print_error "Backend tests failed"
+        print_error "Unified test runner not found at tests/run-all-tests.sh"
         exit 1
     fi
-    cd ..
-    
-    print_status "🧪 Running frontend tests..."
-    cd client
-    npm test -- --run --silent
-    if [ $? -eq 0 ]; then
-        print_success "Frontend tests passed"
-    else
-        print_error "Frontend tests failed"
-        exit 1
-    fi
-    cd ..
-    
-    print_status "🧪 Integration tests temporarily disabled..."
-    print_warning "Integration tests need path resolution fix - skipping for now"
-    print_success "🎉 All tests passed! Starting development servers..."
 }
 
 # Function to start backend server
