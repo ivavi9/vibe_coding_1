@@ -108,24 +108,39 @@ export const GoalProvider: React.FC<GoalProviderProps> = ({ children }) => {
 
   const updateGoal = useCallback(async (goalId: string, updates: Partial<Goal>): Promise<Goal> => {
     try {
-      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`, {
+      console.log('updateGoal called with:', { goalId, updates }); // Debug log
+      
+      const url = `${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`;
+      console.log('Making request to:', url); // Debug log
+      
+      const response = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
 
+      console.log('Response status:', response.status); // Debug log
+      console.log('Response ok:', response.ok); // Debug log
+
       if (response.ok) {
         const result = await response.json();
+        console.log('Response data:', result); // Debug log
+        
         if (result.success && result.data) {
           const updatedGoal = result.data;
+          console.log('Updated goal:', updatedGoal); // Debug log
+          
           setGoals(prev => prev.map(goal => 
             goal.id === goalId ? { ...goal, ...updatedGoal } : goal
           ));
           return updatedGoal;
         } else {
+          console.error('Invalid response format:', result); // Debug log
           throw new Error('Invalid response format');
         }
       } else {
+        const errorText = await response.text();
+        console.error('Response not ok:', response.status, errorText); // Debug log
         throw new Error('Failed to update goal');
       }
     } catch (error) {

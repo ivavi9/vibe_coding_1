@@ -44,7 +44,12 @@ const Dashboard: React.FC = () => {
   };
 
   const trackProgress = async () => {
-    if (!selectedGoalId || !progressInput.trim() || progressValue <= 0) return;
+    console.log('trackProgress called with:', { selectedGoalId, progressInput, progressValue }); // Debug log
+    
+    if (!selectedGoalId || !progressInput.trim() || progressValue <= 0) {
+      console.log('Validation failed:', { selectedGoalId, progressInput, progressValue }); // Debug log
+      return;
+    }
 
     try {
       // Find the selected goal
@@ -54,10 +59,14 @@ const Dashboard: React.FC = () => {
         return;
       }
 
+      console.log('Selected goal:', selectedGoal); // Debug log
+
       // Calculate new progress
       const newProgress = Math.min(selectedGoal.current_progress + progressValue, selectedGoal.target_progress);
+      console.log('Calculated new progress:', newProgress); // Debug log
       
       // Update the goal with new progress
+      console.log('Calling updateGoal with:', { selectedGoalId, current_progress: newProgress }); // Debug log
       await updateGoal(selectedGoalId, { current_progress: newProgress });
       
       // Clear the form
