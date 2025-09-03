@@ -108,7 +108,7 @@ export const GoalProvider: React.FC<GoalProviderProps> = ({ children }) => {
 
   const updateGoal = useCallback(async (goalId: string, updates: Partial<Goal>): Promise<Goal> => {
     try {
-      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}/`, {
+      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -137,7 +137,7 @@ export const GoalProvider: React.FC<GoalProviderProps> = ({ children }) => {
 
   const deleteGoal = useCallback(async (goalId: string): Promise<void> => {
     try {
-      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}/`, {
+      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'cancelled' })
@@ -160,7 +160,7 @@ export const GoalProvider: React.FC<GoalProviderProps> = ({ children }) => {
 
   const completeGoal = useCallback(async (goalId: string): Promise<void> => {
     try {
-      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}/`, {
+      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'completed' })
@@ -183,7 +183,7 @@ export const GoalProvider: React.FC<GoalProviderProps> = ({ children }) => {
 
   const reactivateGoal = useCallback(async (goalId: string): Promise<void> => {
     try {
-      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}/`, {
+      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'active' })

@@ -68,7 +68,7 @@ export const useGoalState = () => {
 
   const updateGoal = async (goalId: string, updates: Partial<Goal>) => {
     try {
-      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}/`, {
+      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -92,7 +92,7 @@ export const useGoalState = () => {
 
   const deleteGoal = async (goalId: string) => {
     try {
-      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}/`, {
+      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'cancelled' })
@@ -115,7 +115,7 @@ export const useGoalState = () => {
 
   const completeGoal = async (goalId: string) => {
     try {
-      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}/`, {
+      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'completed' })
@@ -138,7 +138,7 @@ export const useGoalState = () => {
 
   const reactivateGoal = async (goalId: string) => {
     try {
-      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}/`, {
+      const response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.GOALS)}/${goalId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'active' })
