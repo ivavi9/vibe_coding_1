@@ -5,9 +5,23 @@
 ## 📚 **📖 START HERE: PROJECT ENTRY POINT**
 
 **Before starting any development work, please read:**
-- **[PROJECT_ENTRY_POINT.md](./PROJECT_ENTRY_POINT.md)** - Complete project overview and quick start
-- **[TEST_COVERAGE_SUMMARY.md](./TEST_COVERAGE_SUMMARY.md)** - Current test status and coverage
-- **[DEVELOPMENT_WORKFLOW.md](./DEVELOPMENT_WORKFLOW.md)** - Mandatory development process
+- **[PROJECT_ENTRY_POINT.md](./documentation/PROJECT_ENTRY_POINT.md)** - Complete project overview and quick start
+- **[TEST_COVERAGE_SUMMARY.md](./documentation/TEST_COVERAGE_SUMMARY.md)** - Current test status and coverage
+- **[DEVELOPMENT_WORKFLOW.md](./documentation/DEVELOPMENT_WORKFLOW.md)** - Mandatory development process
+
+## 📖 **COMPLETE DOCUMENTATION**
+
+**All project documentation is organized in the `./documentation/` folder:**
+
+- **[PROJECT_ENTRY_POINT.md](./documentation/PROJECT_ENTRY_POINT.md)** - Complete project overview and quick start
+- **[ARCHITECTURE.md](./documentation/ARCHITECTURE.md)** - System architecture and design patterns
+- **[DATA_MODEL_ARCHITECTURE.md](./documentation/DATA_MODEL_ARCHITECTURE.md)** - Database and data model design
+- **[DEVELOPMENT_WORKFLOW.md](./documentation/DEVELOPMENT_WORKFLOW.md)** - Mandatory development process and rules
+- **[DEVELOPMENT_STATUS.md](./documentation/DEVELOPMENT_STATUS.md)** - Current development progress and status
+- **[TEST_COVERAGE_SUMMARY.md](./documentation/TEST_COVERAGE_SUMMARY.md)** - Test coverage and testing strategy
+- **[CONTRIBUTING.md](./documentation/CONTRIBUTING.md)** - How to contribute to the project
+- **[GOOGLE_AUTH_SETUP.md](./documentation/GOOGLE_AUTH_SETUP.md)** - Google OAuth configuration guide
+- **[version-3-manifest.md](./documentation/version-3-manifest.md)** - Version 3 feature manifest and roadmap
 
 ## 🧪 **QUICK START (MANDATORY)**
 
@@ -40,7 +54,7 @@
 
 ## 📋 **NEXT STEPS**
 
-1. **Read [PROJECT_ENTRY_POINT.md](./PROJECT_ENTRY_POINT.md)** for complete understanding
+1. **Read [PROJECT_ENTRY_POINT.md](./documentation/PROJECT_ENTRY_POINT.md)** for complete understanding
 2. **Follow the test-driven workflow** - tests must pass before servers start
 3. **Implement next priority features** as outlined in the entry point document
 
