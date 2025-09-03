@@ -4,7 +4,7 @@ import {
   ExtractedGoalsList,
   GoalManagement
 } from '../components/goals';
-import { AuthenticationBanners } from '../components/goals/AuthenticationBanners';
+// AuthenticationBanners removed - now using global AuthenticationBanner
 import { useGoalExtraction } from '../components/goals/GoalExtractionManager';
 import { useGoalContext } from '../contexts/GoalContext';
 import { useAuth } from '../hooks/useAuth';
@@ -13,24 +13,12 @@ import ToastContainer from '../components/ui/ToastContainer';
 import GoalExtractionLoader from '../components/goals/GoalExtractionLoader';
 
 const Goals: React.FC = () => {
-  const [showWelcomeBanner, setShowWelcomeBanner] = useState(true);
   const { toasts, removeToast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
   
   // Custom hooks for goal management
   const goalState = useGoalContext();
   const goalExtraction = useGoalExtraction();
-
-  // Auto-dismiss welcome banner after 5 seconds
-  useEffect(() => {
-    if (isAuthenticated && showWelcomeBanner) {
-      const timer = setTimeout(() => {
-        setShowWelcomeBanner(false);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isAuthenticated, showWelcomeBanner]);
 
   // Show loading state during authentication
   if (isLoading) {
@@ -60,11 +48,7 @@ const Goals: React.FC = () => {
   return (
     <>
       <div className="max-w-6xl mx-auto p-6 space-y-8">
-        {/* Authentication Banners */}
-        <AuthenticationBanners
-          showWelcomeBanner={showWelcomeBanner}
-          onDismissWelcome={() => setShowWelcomeBanner(false)}
-        />
+        {/* Authentication is now handled globally via AuthenticationBanner */}
 
         {/* Goal Extraction Form */}
         <GoalExtractionForm

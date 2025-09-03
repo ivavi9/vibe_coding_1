@@ -182,10 +182,25 @@ export const GoalProvider: React.FC<GoalProviderProps> = ({ children }) => {
       });
 
       if (response.ok) {
-        setGoals(prev => prev.map(goal => 
-          goal.id === goalId ? { ...goal, status: 'completed' } : goal
-        ));
-        showSuccess('Goal Completed', 'Congratulations! You have completed this goal.');
+        const updatedGoal = await response.json();
+        if (updatedGoal.success && updatedGoal.data) {
+          setGoals(prev => prev.map(goal => 
+            goal.id === goalId ? { ...goal, status: 'completed' } : goal
+          ));
+          
+          // Trigger celebration animation
+          const goal = goals.find(g => g.id === goalId);
+          if (goal) {
+            // Emit custom event for celebration
+            window.dispatchEvent(new CustomEvent('goalCompleted', { 
+              detail: { goalTitle: goal.title } 
+            }));
+          }
+          
+          showSuccess('Goal Completed', 'Congratulations! You have completed this goal.');
+        } else {
+          throw new Error('Failed to complete goal');
+        }
       } else {
         throw new Error('Failed to complete goal');
       }
@@ -194,7 +209,7 @@ export const GoalProvider: React.FC<GoalProviderProps> = ({ children }) => {
       showError('Failed to Complete Goal', 'Something went wrong while completing your goal. Please try again.');
       throw error;
     }
-  }, [showSuccess, showError]);
+  }, [showSuccess, showError, goals]);
 
   const reactivateGoal = useCallback(async (goalId: string): Promise<void> => {
     try {
