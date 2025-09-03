@@ -36,48 +36,18 @@ class ProgressService:
     
     async def get_progress_history(self, goal_id: str) -> List[ProgressResponse]:
         """Get progress history for a specific goal."""
-        # TODO: Implement actual progress history retrieval
+        # TODO: Implement actual progress history retrieval with user context
         logger.info(f"Retrieving progress history for goal: {goal_id}")
         
-        # Placeholder response
-        history = [
-            ProgressResponse(
-                id="1",
-                goal_id=goal_id,
-                value=3,
-                notes="Finished third book",
-                created_at="2024-01-01T00:00:00Z"
-            ),
-            ProgressResponse(
-                id="2",
-                goal_id=goal_id,
-                value=2,
-                notes="Finished second book",
-                created_at="2024-01-01T00:00:00Z"
-            ),
-            ProgressResponse(
-                id="3",
-                goal_id=goal_id,
-                value=1,
-                notes="Finished first book",
-                created_at="2024-01-01T00:00:00Z"
-            )
-        ]
-        
-        return history
+        # Return empty list instead of hardcoded demo data
+        # When database is implemented, this will filter by user_id and goal_id
+        return []
     
     async def add_manual_progress(self, goal_id: str, progress_data: ProgressUpdate) -> dict:
         """Add manual progress entry for a goal."""
-        # TODO: Implement actual manual progress addition
+        # TODO: Implement actual manual progress addition with user context
         logger.info(f"Adding manual progress for goal: {goal_id}")
         
-        # Placeholder response
-        result = {
-            "message": "Manual progress added successfully",
-            "goal_id": goal_id,
-            "progress_value": progress_data.new_progress_value,
-            "notes": progress_data.notes,
-            "created_at": "2024-01-01T00:00:00Z"
-        }
-        
-        return result
+        # For now, raise an error since we don't have real data persistence
+        # When database is implemented, this will create actual progress entries
+        raise ValueError("Manual progress addition not implemented yet - database integration required")

@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { LogOut, User, ChevronDown } from 'lucide-react';
-import GoogleSignInButton from './GoogleSignInButton';
 
 const UserProfile: React.FC = () => {
   const { user, logout, isGoogleLoading } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Show Google sign-in button when not authenticated
+  // Only show component when user is authenticated
   if (!user) {
-    return (
-      <div className="flex items-center space-x-4">
-        <span className="text-sm text-gray-500">Guest Mode</span>
-        <GoogleSignInButton />
-      </div>
-    );
+    return null; // Don't show anything when not authenticated
   }
 
   // Show user profile when authenticated
