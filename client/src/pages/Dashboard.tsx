@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
+import { API_CONFIG, buildApiUrl } from '../config/constants';
 
 interface Goal {
   id: string;
@@ -34,7 +35,7 @@ const Dashboard: React.FC = () => {
 
   const fetchGoals = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/goals');
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.GOALS));
       const data = await response.json();
       if (data.success) {
         setGoals(data.data);
@@ -46,7 +47,7 @@ const Dashboard: React.FC = () => {
 
   const fetchProgressHistory = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/progress');
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PROGRESS));
       const data = await response.json();
       if (data.success) {
         setProgressHistory(data.data);
@@ -62,7 +63,7 @@ const Dashboard: React.FC = () => {
     if (!selectedGoalId || !progressInput.trim() || progressValue <= 0) return;
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/progress', {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PROGRESS), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

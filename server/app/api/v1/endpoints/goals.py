@@ -7,7 +7,7 @@ This module handles goal creation, retrieval, updating, and deletion.
 import logging
 from fastapi import APIRouter, HTTPException, status
 from typing import List
-from app.schemas.goals import GoalCreate, GoalUpdate, GoalResponse
+from app.schemas.goals import GoalCreate, GoalUpdate
 from app.services.goals import GoalService
 from app.services.ai_service import ai_service
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/", response_model=GoalResponse)
+@router.post("/")
 async def create_goal(
     goal_data: GoalCreate
 ):
@@ -24,6 +24,7 @@ async def create_goal(
     goal_service = GoalService()
     try:
         goal = await goal_service.create_goal(goal_data)
+        # Return the goal data directly
         return goal
     except ValueError as e:
         raise HTTPException(
@@ -32,15 +33,16 @@ async def create_goal(
         )
 
 
-@router.get("/", response_model=List[GoalResponse])
+@router.get("/")
 async def get_goals():
     """Get all goals for the current user."""
     goal_service = GoalService()
     goals = await goal_service.get_goals()
+    # Return the goals data directly
     return goals
 
 
-@router.get("/{goal_id}", response_model=GoalResponse)
+@router.get("/{goal_id}")
 async def get_goal(goal_id: str):
     """Get a specific goal by ID."""
     goal_service = GoalService()
@@ -50,10 +52,14 @@ async def get_goal(goal_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Goal not found"
         )
-    return goal
+    return {
+        "success": True,
+        "data": goal,
+        "message": "Goal retrieved successfully"
+    }
 
 
-@router.put("/{goal_id}", response_model=GoalResponse)
+@router.put("/{goal_id}")
 async def update_goal(
     goal_id: str,
     goal_data: GoalUpdate
@@ -62,7 +68,11 @@ async def update_goal(
     goal_service = GoalService()
     try:
         goal = await goal_service.update_goal(goal_id, goal_data)
-        return goal
+        return {
+            "success": True,
+            "data": goal,
+            "message": "Goal updated successfully"
+        }
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

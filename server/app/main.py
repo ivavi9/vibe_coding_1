@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.core.constants import ALLOWED_ORIGINS, API_TITLE, API_VERSION, API_DESCRIPTION
 from app.api.v1.api import api_router
 
 # Configure logging
@@ -28,16 +29,16 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI application
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description=settings.PROJECT_DESCRIPTION,
-    version=settings.VERSION,
+    title=API_TITLE,
+    description=API_DESCRIPTION,
+    version=API_VERSION,
     lifespan=lifespan
 )
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,8 +78,8 @@ async def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "service": settings.PROJECT_NAME,
-        "version": settings.VERSION,
+        "service": API_TITLE,
+        "version": API_VERSION,
         "timestamp": time.time()
     }
 
@@ -87,9 +88,9 @@ async def health_check():
 async def root():
     """Root endpoint with API information."""
     return {
-        "message": f"Welcome to {settings.PROJECT_NAME}",
-        "version": settings.VERSION,
-        "description": settings.PROJECT_DESCRIPTION,
+        "message": f"Welcome to {API_TITLE}",
+        "version": API_VERSION,
+        "description": API_DESCRIPTION,
         "docs": "/docs",
         "health": "/health"
     }

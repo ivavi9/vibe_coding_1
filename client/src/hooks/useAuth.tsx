@@ -22,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id'
 const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/callback'
+import { API_CONFIG, GOOGLE_CONFIG, buildApiUrl } from '../config/constants';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Real token validation with backend (when implemented)
       console.log('Validating real token with backend...');
-      const response = await fetch('http://localhost:8000/api/v1/auth/validate', {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH_VALIDATE), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -178,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const exchangeCodeForToken = async (code: string) => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/google/callback', {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH_GOOGLE_CALLBACK), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -211,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Call backend logout endpoint
       const token = localStorage.getItem('auth_token')
       if (token) {
-        await fetch('http://localhost:8000/api/v1/auth/logout', {
+        await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AUTH_LOGOUT), {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`

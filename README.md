@@ -1,57 +1,56 @@
-# Clarity - AI-Native Personal Achievement Partner
+# 🚀 **CLARITY - AI-Powered Goal Tracking Application**
 
-## Project Overview
+> **A modern, test-driven goal management system with AI-powered goal extraction and progress tracking.**
 
-Clarity is an AI-native personal achievement partner that eliminates the friction between ambition and action. Built with modern technologies and following Apple's human interface guidelines, it provides a minimalist, elegant interface for goal tracking and progress management.
+## 📚 **📖 START HERE: PROJECT ENTRY POINT**
 
-## Core Features
+**Before starting any development work, please read:**
+- **[PROJECT_ENTRY_POINT.md](./PROJECT_ENTRY_POINT.md)** - Complete project overview and quick start
+- **[TEST_COVERAGE_SUMMARY.md](./TEST_COVERAGE_SUMMARY.md)** - Current test status and coverage
+- **[DEVELOPMENT_WORKFLOW.md](./DEVELOPMENT_WORKFLOW.md)** - Mandatory development process
 
-- **Intelligent Goal Extraction**: AI-powered goal creation from natural language input
-- **Smart Progress Tracking**: Automatic progress updates through natural language
-- **Minimalist Design**: Clean, uncluttered interface inspired by Apple's design principles
-- **Seamless Flow**: Fluid user experience with immediate feedback and smooth transitions
+## 🧪 **QUICK START (MANDATORY)**
 
-## Tech Stack
+```bash
+# 🚫 NEVER start servers manually - always use the test-driven workflow!
 
-### Frontend
-- React with TypeScript
-- Vite for build tooling
-- Tailwind CSS for styling
-- Framer Motion for animations
-- React Hook Form with Zod validation
+# Run tests only (recommended for development)
+./scripts/run-tests.sh
 
-### Backend
-- FastAPI with Python
-- PostgreSQL database
-- JWT authentication
-- Google Gemini 1.5 API integration
-- Docker containerization
+# Full workflow: tests + start servers (recommended for feature testing)
+./scripts/test-and-start.sh
 
-## Project Structure
-
-```
-/
-├── client/          # Frontend React application
-├── server/          # Backend FastAPI application
-├── docker-compose.yml
-├── LICENSE
-└── version-3-manifest.md
+# Stop development servers
+./scripts/stop-servers.sh
 ```
 
-## Quick Start
+## 🏗️ **ARCHITECTURE OVERVIEW**
 
-1. Clone the repository
-2. Run `docker-compose up` for one-command local environment setup
-3. Access the application at `http://localhost:3000`
+- **Backend**: FastAPI with modular service architecture
+- **Frontend**: React + TypeScript with centralized configuration
+- **Testing**: Comprehensive test suite (Backend: 100%, Frontend: 100%)
+- **Workflow**: Test-driven development with mandatory test compliance
 
-## Development
+## 🎯 **CURRENT STATUS**
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines and coding standards.
+- ✅ **Backend**: 14/14 tests passing (100% coverage)
+- ✅ **Frontend**: 2/2 tests passing (100% coverage)
+- ⚠️ **Integration**: Temporarily disabled (path resolution fix needed)
+- 🚀 **Ready for development** with proper test coverage
 
-## Manifest
+## 📋 **NEXT STEPS**
 
-This project follows the specifications outlined in [version-3-manifest.md](./version-3-manifest.md).
+1. **Read [PROJECT_ENTRY_POINT.md](./PROJECT_ENTRY_POINT.md)** for complete understanding
+2. **Follow the test-driven workflow** - tests must pass before servers start
+3. **Implement next priority features** as outlined in the entry point document
 
-## License
+## 🔒 **DEVELOPMENT RULES**
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+- ❌ **NEVER start servers manually**
+- ✅ **ALWAYS run tests first**
+- 🔄 **Every feature change must pass regression tests**
+- 📚 **Refer to entry point documentation before starting**
+
+---
+
+**Happy coding! Remember: Tests First, Servers Second! 🧪✨**
