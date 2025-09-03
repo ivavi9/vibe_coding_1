@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsGoogleLoading(true);
     try {
       // TESTING: Mock authentication for development
-      if (true) { // Always use mock auth for now
+      if (import.meta.env.DEV && false) { // Set to false to test real OAuth
         // Simulate Google OAuth delay
         await new Promise(resolve => setTimeout(resolve, 1000));
         

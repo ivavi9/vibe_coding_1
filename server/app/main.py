@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.v1 import goals, progress, documents
+from app.api.v1.api import api_router
 
 # Configure logging
 logging.basicConfig(
@@ -68,10 +68,8 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}")
     return {"error": "Internal server error", "detail": str(exc)}
 
-# Include API routers
-app.include_router(goals.router, prefix=f"{settings.API_V1_STR}/goals", tags=["goals"])
-app.include_router(progress.router, prefix=f"{settings.API_V1_STR}/progress", tags=["progress"])
-app.include_router(documents.router, prefix=f"{settings.API_V1_STR}/documents", tags=["documents"])
+# Include main API router
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # Health check endpoint
 @app.get("/health")
@@ -94,4 +92,18 @@ async def root():
         "description": settings.PROJECT_DESCRIPTION,
         "docs": "/docs",
         "health": "/health"
+    }
+
+# Test Google OAuth endpoint (simple version)
+@app.post("/test-google-oauth")
+async def test_google_oauth():
+    """Test endpoint for Google OAuth without database dependencies."""
+    return {
+        "message": "Google OAuth test endpoint working",
+        "status": "success",
+        "endpoints": {
+            "google_callback": "/api/v1/auth/google/callback",
+            "validate_token": "/api/v1/auth/validate",
+            "logout": "/api/v1/auth/logout"
+        }
     }

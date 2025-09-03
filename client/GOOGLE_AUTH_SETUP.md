@@ -15,19 +15,34 @@
 6. Add authorized redirect URIs:
    - `http://localhost:3000/auth/callback` (for development)
    - `https://yourdomain.com/auth/callback` (for production)
-7. Copy the Client ID
+7. Copy the Client ID and Client Secret
 
 ## Step 2: Environment Configuration
 
+### Backend Configuration (Root `.env` file)
+Add these to your root `.env` file:
+
+```bash
+# Google OAuth Configuration (PRIVATE - keep secret!)
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback
+
+# JWT Configuration
+JWT_SECRET_KEY=your-super-secure-jwt-secret-key-here
+SECRET_KEY=your-app-secret-key-here
+```
+
+### Frontend Configuration (Client `.env` file)
 Create a `.env` file in the `client` directory:
 
 ```bash
-# Google OAuth Configuration
-REACT_APP_GOOGLE_CLIENT_ID=your-google-client-id-here
-REACT_APP_GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback
+# Google OAuth Configuration (PUBLIC - safe to expose)
+VITE_GOOGLE_CLIENT_ID=your-google-client-id-here
+VITE_GOOGLE_REDIRECT_URI=http://localhost:3000/auth/callback
 
 # Backend API URL
-REACT_APP_API_URL=http://localhost:8000
+VITE_API_URL=http://localhost:8000
 ```
 
 ## Step 3: Backend API Endpoints
@@ -75,22 +90,37 @@ Your backend user model should include:
 
 ## Security Notes
 
+- **NEVER commit `.env` files to git** - they're already in `.gitignore`
+- **Client Secret stays in backend only** - never expose to frontend
 - Always validate OAuth state parameter
 - Use HTTPS in production
 - Implement proper JWT token validation
 - Store sensitive data securely
 - Implement rate limiting on auth endpoints
+- Use different client IDs/secrets for dev/staging/production
 
 ## Troubleshooting
 
 ### Common Issues:
 1. **"Invalid redirect_uri"**: Check your Google Cloud Console redirect URIs
-2. **"Client ID not found"**: Verify your environment variables
+2. **"Client ID not found"**: Verify your environment variables are loaded
 3. **"OAuth state mismatch"**: Check if cookies/localStorage is working
 4. **"Backend connection failed"**: Ensure backend is running on port 8000
+5. **"Client secret invalid"**: Verify backend `.env` has correct secret
 
 ### Debug Steps:
 1. Check browser console for errors
-2. Verify environment variables are loaded
+2. Verify environment variables are loaded (use `console.log` in dev)
 3. Check network tab for API calls
 4. Verify Google Cloud Console configuration
+5. Ensure `.env` files are in correct locations
+
+## File Structure
+```
+progress_tracker/
+├── .env                    ← Backend config (Google OAuth + JWT secrets)
+├── client/
+│   ├── .env               ← Frontend config (public OAuth vars)
+│   └── src/
+└── server/                 ← Backend (uses root .env)
+```

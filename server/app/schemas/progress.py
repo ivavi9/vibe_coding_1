@@ -16,6 +16,11 @@ class ProgressCreate(ProgressBase):
     """Model for creating a new progress entry."""
     pass
 
+class ProgressUpdate(BaseModel):
+    """Model for updating progress."""
+    description: str = Field(..., min_length=1, max_length=500, description="Description of the progress made")
+    progress_value: float = Field(..., gt=0, description="Progress value to add")
+
 class Progress(ProgressBase):
     """Complete progress model with all fields."""
     id: str = Field(..., description="Unique progress entry identifier")

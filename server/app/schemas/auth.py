@@ -37,12 +37,36 @@ class UserResponse(BaseModel):
 
 
 class PasswordReset(BaseModel):
-    """Schema for password reset."""
+    """Password reset request."""
     email: EmailStr
 
 
 class PasswordUpdate(BaseModel):
-    """Schema for password update."""
+    """Password update request."""
     current_password: str
     new_password: str
     confirm_new_password: str
+
+
+# Google OAuth Schemas
+class GoogleOAuthCallback(BaseModel):
+    """Schema for Google OAuth callback."""
+    code: str
+    state: Optional[str] = None
+
+
+class GoogleUserInfo(BaseModel):
+    """Schema for Google user information."""
+    id: str
+    email: str
+    name: str
+    picture: Optional[str] = None
+    verified_email: bool = True
+
+
+class GoogleAuthResponse(BaseModel):
+    """Schema for Google OAuth response."""
+    access_token: str
+    user: GoogleUserInfo
+    token_type: str = "bearer"
+    expires_in: int
