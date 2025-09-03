@@ -1,107 +1,344 @@
-import React, { useEffect, useState } from 'react';
-import { CheckCircle, Sparkles, Trophy } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Trophy, 
+  Star, 
+  Sparkles, 
+  Zap, 
+  Fire, 
+  Crown,
+  Heart,
+  Rocket,
+  Target,
+  Award
+} from 'lucide-react';
 
 interface GoalCompletionCelebrationProps {
   isVisible: boolean;
   goalTitle: string;
-  onComplete: () => void;
+  onClose: () => void;
 }
 
 const GoalCompletionCelebration: React.FC<GoalCompletionCelebrationProps> = ({
   isVisible,
   goalTitle,
-  onComplete
+  onClose
 }) => {
-  const [animationPhase, setAnimationPhase] = useState<'idle' | 'entering' | 'celebrating' | 'exiting'>('idle');
+  const [celebrationLevel, setCelebrationLevel] = useState(1);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showFireworks, setShowFireworks] = useState(false);
 
   useEffect(() => {
     if (isVisible) {
-      setAnimationPhase('entering');
-      
-      // Celebration sequence
-      const timer = setTimeout(() => setAnimationPhase('celebrating'), 100);
-      const exitTimer = setTimeout(() => {
-        setAnimationPhase('exiting');
-        setTimeout(() => {
-          setAnimationPhase('idle');
-          onComplete();
-        }, 500);
-      }, 2000);
+      // Start celebration sequence
+      const timer1 = setTimeout(() => setCelebrationLevel(2), 1000);
+      const timer2 = setTimeout(() => setCelebrationLevel(3), 2000);
+      const timer3 = setTimeout(() => setShowConfetti(true), 500);
+      const timer4 = setTimeout(() => setShowFireworks(true), 1500);
+      const timer5 = setTimeout(() => {
+        setShowConfetti(false);
+        setShowFireworks(false);
+        onClose();
+      }, 5000);
 
       return () => {
-        clearTimeout(timer);
-        clearTimeout(exitTimer);
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+        clearTimeout(timer4);
+        clearTimeout(timer5);
       };
     }
-  }, [isVisible, onComplete]);
+  }, [isVisible, onClose]);
 
-  if (!isVisible || animationPhase === 'idle') return null;
+  const getCelebrationContent = () => {
+    switch (celebrationLevel) {
+      case 1:
+        return {
+          icon: <Trophy className="w-16 h-16 text-yellow-500" />,
+          title: 'Goal Completed! 🎉',
+          subtitle: 'You did it!',
+          message: `Congratulations on completing "${goalTitle}"!`,
+          color: 'from-yellow-400 to-orange-500'
+        };
+      case 2:
+        return {
+          icon: <Crown className="w-16 h-16 text-purple-500" />,
+          title: 'You\'re Amazing! 👑',
+          subtitle: 'Keep the momentum going!',
+          message: 'Every completed goal brings you closer to your dreams.',
+          color: 'from-purple-400 to-pink-500'
+        };
+      case 3:
+        return {
+          icon: <Rocket className="w-16 h-16 text-blue-500" />,
+          title: 'Unstoppable! 🚀',
+          subtitle: 'Ready for the next challenge?',
+          message: 'Your dedication is inspiring. What\'s your next goal?',
+          color: 'from-blue-400 to-indigo-500'
+        };
+      default:
+        return {
+          icon: <Trophy className="w-16 h-16 text-yellow-500" />,
+          title: 'Goal Completed! 🎉',
+          subtitle: 'You did it!',
+          message: `Congratulations on completing "${goalTitle}"!`,
+          color: 'from-yellow-400 to-orange-500'
+        };
+    }
+  };
+
+  const content = getCelebrationContent();
+
+  if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-      {/* Backdrop */}
-      <div 
-        className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ${
-          animationPhase === 'entering' ? 'opacity-0' : 
-          animationPhase === 'celebrating' ? 'opacity-100' : 'opacity-0'
-        }`}
-      />
-      
-      {/* Celebration Card */}
-      <div 
-        className={`relative bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20 
-          transform transition-all duration-500 ease-out ${
-            animationPhase === 'entering' ? 'scale-75 opacity-0 translate-y-8' : 
-            animationPhase === 'celebrating' ? 'scale-100 opacity-100 translate-y-0' : 
-            'scale-110 opacity-0 translate-y-4'
-          }`}
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
       >
-        {/* Floating Sparkles */}
-        <div className="absolute -top-4 -left-4 animate-bounce">
-          <Sparkles className="w-6 h-6 text-yellow-400" />
-        </div>
-        <div className="absolute -top-2 -right-2 animate-bounce" style={{ animationDelay: '0.2s' }}>
-          <Sparkles className="w-5 h-5 text-blue-400" />
-        </div>
-        <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 animate-bounce" style={{ animationDelay: '0.4s' }}>
-          <Sparkles className="w-4 h-4 text-purple-400" />
-        </div>
+        {/* Confetti Background */}
+        {showConfetti && (
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(50)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-yellow-400 rounded-full"
+                initial={{
+                  x: Math.random() * window.innerWidth,
+                  y: -10,
+                  rotate: 0
+                }}
+                animate={{
+                  y: window.innerHeight + 10,
+                  rotate: 360,
+                  x: Math.random() * window.innerWidth
+                }}
+                transition={{
+                  duration: Math.random() * 3 + 2,
+                  ease: "linear",
+                  repeat: Infinity
+                }}
+                style={{
+                  left: Math.random() * window.innerWidth,
+                  animationDelay: Math.random() * 2
+                }}
+              />
+            ))}
+          </div>
+        )}
 
-        {/* Main Content */}
-        <div className="text-center space-y-4">
-          {/* Trophy Icon */}
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full blur-lg opacity-30 animate-pulse" />
-            <Trophy className="w-16 h-16 text-yellow-500 mx-auto relative z-10" />
+        {/* Fireworks */}
+        {showFireworks && (
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute"
+                initial={{
+                  scale: 0,
+                  opacity: 1
+                }}
+                animate={{
+                  scale: [0, 1, 0],
+                  opacity: [1, 1, 0]
+                }}
+                transition={{
+                  duration: 2,
+                  delay: i * 0.3,
+                  ease: "easeOut"
+                }}
+                style={{
+                  left: Math.random() * window.innerWidth,
+                  top: Math.random() * window.innerHeight
+                }}
+              >
+                <div className="w-4 h-4 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full" />
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Main Celebration Card */}
+        <motion.div
+          className="relative bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl"
+          initial={{ scale: 0.5, y: 50 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.5, y: 50 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 300, 
+            damping: 30 
+          }}
+        >
+          {/* Floating Icons */}
+          <div className="absolute -top-4 -left-4">
+            <motion.div
+              animate={{ 
+                rotate: [0, 360],
+                scale: [1, 1.2, 1]
+              }}
+              transition={{ 
+                duration: 3, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Star className="w-6 h-6 text-yellow-400" />
+            </motion.div>
           </div>
 
-          {/* Congratulations Text */}
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Congratulations!
-            </h2>
-            <p className="text-gray-600 text-lg">
-              You've completed your goal
-            </p>
-            <p className="text-gray-800 font-semibold text-xl">
-              "{goalTitle}"
-            </p>
+          <div className="absolute -top-4 -right-4">
+            <motion.div
+              animate={{ 
+                rotate: [360, 0],
+                scale: [1, 1.2, 1]
+              }}
+              transition={{ 
+                duration: 2.5, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Sparkles className="w-6 h-6 text-purple-400" />
+            </motion.div>
           </div>
 
-          {/* Success Checkmark */}
-          <div className="flex justify-center">
-            <div className="bg-green-100 rounded-full p-3">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
+          <div className="absolute -bottom-4 -left-4">
+            <motion.div
+              animate={{ 
+                y: [0, -10, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ 
+                duration: 2, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Heart className="w-6 h-6 text-pink-400" />
+            </motion.div>
           </div>
 
-          {/* Subtle Message */}
-          <p className="text-gray-500 text-sm">
-            Keep up the amazing work! 🎉
-          </p>
-        </div>
-      </div>
-    </div>
+          <div className="absolute -bottom-4 -right-4">
+            <motion.div
+              animate={{ 
+                y: [0, 10, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ 
+                duration: 1.8, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Zap className="w-6 h-6 text-blue-400" />
+            </motion.div>
+          </div>
+
+          {/* Main Content */}
+          <motion.div
+            key={celebrationLevel}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5 }}
+            className="relative z-10"
+          >
+            {/* Icon */}
+            <motion.div
+              animate={{ 
+                rotate: [0, -10, 10, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ 
+                duration: 0.6,
+                repeat: Infinity,
+                repeatDelay: 2
+              }}
+              className="mb-6"
+            >
+              {content.icon}
+            </motion.div>
+
+            {/* Title */}
+            <motion.h2
+              className="text-3xl font-bold text-gray-900 mb-2"
+              animate={{ 
+                scale: [1, 1.05, 1],
+                textShadow: [
+                  "0 0 0px rgba(0,0,0,0)",
+                  "0 0 20px rgba(255,215,0,0.5)",
+                  "0 0 0px rgba(0,0,0,0)"
+                ]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              {content.title}
+            </motion.h2>
+
+            {/* Subtitle */}
+            <motion.p
+              className="text-lg font-medium text-gray-700 mb-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              {content.subtitle}
+            </motion.p>
+
+            {/* Message */}
+            <motion.p
+              className="text-gray-600 mb-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              {content.message}
+            </motion.p>
+
+            {/* Progress Bar */}
+            <motion.div
+              className="w-full bg-gray-200 rounded-full h-3 mb-6 overflow-hidden"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.7, duration: 1 }}
+            >
+              <motion.div
+                className={`h-3 bg-gradient-to-r ${content.color} rounded-full`}
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ delay: 1, duration: 1.5 }}
+              />
+            </motion.div>
+
+            {/* Action Button */}
+            <motion.button
+              onClick={onClose}
+              className={`px-6 py-3 bg-gradient-to-r ${content.color} text-white font-medium rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Continue Journey 🚀
+            </motion.button>
+          </motion.div>
+
+          {/* Background Glow */}
+          <div className={`absolute inset-0 bg-gradient-to-r ${content.color} opacity-10 rounded-2xl blur-3xl -z-10`} />
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

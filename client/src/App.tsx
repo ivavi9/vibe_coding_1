@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Goals from './pages/Goals'
-import { Analytics } from './pages/Analytics'
+import Analytics from './pages/Analytics'
 import Auth from './pages/Auth'
 import GoogleAuthCallback from './pages/GoogleAuthCallback'
 import { Layout } from './components/Layout'
@@ -68,7 +68,7 @@ function App() {
       <GoalCompletionCelebration
         isVisible={celebrationState.isVisible}
         goalTitle={celebrationState.goalTitle}
-        onComplete={() => setCelebrationState({ isVisible: false, goalTitle: '' })}
+        onClose={() => setCelebrationState({ isVisible: false, goalTitle: '' })}
       />
       <AuthenticationBanner />
       </GoalProvider>
