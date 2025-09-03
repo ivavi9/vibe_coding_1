@@ -45,6 +45,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const validateToken = async (token: string) => {
     try {
+      // Check if we have cached user data first
+      const cachedUserData = localStorage.getItem('user_data');
+      if (cachedUserData) {
+        try {
+          const userData = JSON.parse(cachedUserData);
+          setUser(userData);
+          setIsLoading(false);
+          return;
+        } catch (parseError) {
+          console.error('Failed to parse cached user data:', parseError);
+          localStorage.removeItem('user_data');
+        }
+      }
+
       // TESTING: Handle mock tokens for development
       if (token.startsWith('mock-jwt-token-')) {
         // Mock token validation - always valid in development
@@ -56,6 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           picture: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
           created_at: new Date().toISOString()
         };
+        
+        // Store mock user data
+        localStorage.setItem('user_data', JSON.stringify(mockUser));
         setUser(mockUser);
         setIsLoading(false);
         return;
@@ -70,11 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       
       if (response.ok) {
-        const userData = await response.json()
-        setUser(userData.user)
+        const responseData = await response.json()
+        const userData = responseData.user || responseData;
+        
+        // Store user data in localStorage
+        localStorage.setItem('user_data', JSON.stringify(userData));
+        setUser(userData);
       } else {
-        // Token invalid, remove it
+        // Token invalid, remove it and user data
         localStorage.removeItem('auth_token')
+        localStorage.removeItem('user_data')
       }
     } catch (error) {
       console.error('Token validation failed:', error)
@@ -212,10 +234,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await response.json()
         const { access_token, user: userData } = data
         
-        // Store token
+        // Store token and user data
         localStorage.setItem('auth_token', access_token)
+        localStorage.setItem('user_data', JSON.stringify(userData))
         
-        // Set user
+        // Set user in state
         setUser(userData)
       } else {
         throw new Error('Failed to exchange code for token')
@@ -243,9 +266,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Logout failed:', error)
     } finally {
-      // Clear local state
+      // Clear local state and stored data
       setUser(null)
       localStorage.removeItem('auth_token')
+      localStorage.removeItem('user_data')
     }
   }
 
