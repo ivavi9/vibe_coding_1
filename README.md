@@ -58,12 +58,55 @@
 2. **Follow the test-driven workflow** - tests must pass before servers start
 3. **Implement next priority features** as outlined in the entry point document
 
+## 📊 **PROGRESS TRACKING REQUIREMENTS**
+
+### **After Every Feature Implementation**
+- ✅ **Update test coverage** in [TEST_COVERAGE_SUMMARY.md](./documentation/TEST_COVERAGE_SUMMARY.md)
+- ✅ **Document new features** in [DEVELOPMENT_STATUS.md](./documentation/DEVELOPMENT_STATUS.md)
+- ✅ **Update architecture docs** if new patterns are introduced
+- ✅ **Verify all tests pass** before committing changes
+
+### **Progress Tracker Updates**
+- **Test Coverage**: Update backend, frontend, and integration test counts
+- **Feature Status**: Mark completed features and add new pending items
+- **Architecture Changes**: Document any new components, services, or patterns
+- **Known Issues**: Track any bugs or technical debt discovered
+
 ## 🔒 **DEVELOPMENT RULES**
 
 - ❌ **NEVER start servers manually**
 - ✅ **ALWAYS run tests first**
 - 🔄 **Every feature change must pass regression tests**
 - 📚 **Refer to entry point documentation before starting**
+
+## 🧪 **TESTING REQUIREMENTS (MANDATORY)**
+
+### **Feature Testing Rules**
+- ✅ **Every new feature MUST have functional tests** that mimic real-life user behavior
+- ✅ **Test data flow between frontend and backend** for all API interactions
+- ✅ **Cover both functional and non-functional aspects** (performance, error handling)
+- ✅ **Test complete user journeys** from start to finish
+- ✅ **Regression tests must pass** before any new feature development
+
+### **Test Coverage Requirements**
+- **Frontend Components**: Test user interactions, state changes, API calls
+- **Backend Services**: Test business logic, data validation, error handling
+- **API Endpoints**: Test request/response formats, status codes, edge cases
+- **Integration**: Test frontend-backend communication, data consistency
+- **User Flows**: Test complete feature workflows (e.g., goal creation → progress tracking → completion)
+
+### **Before Git Commit**
+- 🚫 **NEVER commit features without tests**
+- ✅ **All tests must pass** (backend + frontend + integration)
+- ✅ **Test coverage must be maintained or improved**
+- ✅ **Update progress tracker** with new test coverage information
+- ✅ **Document any new testing patterns** for future reference
+
+### **Test Quality Standards**
+- **Realistic Scenarios**: Tests should mimic actual user behavior
+- **Edge Cases**: Cover error conditions, invalid inputs, network failures
+- **Performance**: Test response times, memory usage, scalability
+- **Accessibility**: Test keyboard navigation, screen readers, mobile responsiveness
 
 ## 🧩 **MODULARIZATION GUIDELINES**
 
