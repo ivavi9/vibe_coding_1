@@ -26,8 +26,8 @@ export const API_CONFIG = {
     // Documents
     DOCUMENTS_UPLOAD: '/api/v1/documents/upload/document',
     
-    // Progress
-    PROGRESS: '/api/v1/progress',
+    // Progress tracking is done through goal updates
+    // PROGRESS: '/api/v1/progress', // Removed - progress tracking through goals endpoint
   },
   
   // Frontend URLs

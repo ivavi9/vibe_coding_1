@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
 import { useGoalContext } from '../contexts/GoalContext';
-import { API_CONFIG, buildApiUrl } from '../config/constants';
+import { useToast } from '../hooks/useToast';
+// API_CONFIG and buildApiUrl no longer needed for progress tracking
 
 interface Goal {
   id: string;
@@ -22,7 +23,8 @@ interface ProgressEntry {
 }
 
 const Dashboard: React.FC = () => {
-  const { goals, isLoading: goalsLoading } = useGoalContext();
+  const { goals, isLoading: goalsLoading, updateGoal } = useGoalContext();
+  const { showSuccess, showError } = useToast();
   const [progressHistory, setProgressHistory] = useState<ProgressEntry[]>([]);
   const [progressInput, setProgressInput] = useState('');
   const [selectedGoalId, setSelectedGoalId] = useState('');
@@ -36,41 +38,39 @@ const Dashboard: React.FC = () => {
   // Goals are now managed by GoalContext
 
   const fetchProgressHistory = async () => {
-    try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PROGRESS));
-      const data = await response.json();
-      if (data.success) {
-        setProgressHistory(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching progress history:', error);
-    } finally {
-      setLoading(false);
-    }
+    // Progress history is now derived from goal updates
+    // We'll track progress updates locally for now
+    setLoading(false);
   };
 
   const trackProgress = async () => {
     if (!selectedGoalId || !progressInput.trim() || progressValue <= 0) return;
 
     try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PROGRESS), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          goal_id: selectedGoalId,
-          description: progressInput,
-          progress_value: progressValue
-        })
-      });
-
-      if (response.ok) {
-        setProgressInput('');
-        setProgressValue(1);
-        setSelectedGoalId('');
-        await fetchProgressHistory();
+      // Find the selected goal
+      const selectedGoal = goals.find(goal => goal.id === selectedGoalId);
+      if (!selectedGoal) {
+        console.error('Selected goal not found');
+        return;
       }
+
+      // Calculate new progress
+      const newProgress = Math.min(selectedGoal.current_progress + progressValue, selectedGoal.target_progress);
+      
+      // Update the goal with new progress
+      await updateGoal(selectedGoalId, { current_progress: newProgress });
+      
+      // Clear the form
+      setProgressInput('');
+      setProgressValue(1);
+      setSelectedGoalId('');
+      
+      // Show success message
+      showSuccess('Progress Updated', `Progress updated to ${newProgress}/${selectedGoal.target_progress}`);
+      
     } catch (error) {
       console.error('Error tracking progress:', error);
+      showError('Failed to Update Progress', 'Something went wrong while updating progress. Please try again.');
     }
   };
 

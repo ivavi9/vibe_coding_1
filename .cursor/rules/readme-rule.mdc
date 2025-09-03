@@ -1,0 +1,5 @@
+---
+description: always read the readme.md file and follow the work accordingly.
+globs:
+alwaysApply: true
+---
