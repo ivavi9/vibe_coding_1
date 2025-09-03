@@ -81,6 +81,29 @@
 
 ## 🧪 **TESTING REQUIREMENTS (MANDATORY)**
 
+### **Test Organization Structure**
+The project has **3 distinct test layers** that work together:
+
+#### **1. 🧩 Component Tests (Client-Level)**
+- **Location**: `client/src/**/__tests__/`
+- **Purpose**: Test individual React components, hooks, and utilities
+- **Command**: `cd client && npm test`
+- **Coverage Target**: 80% of all frontend components
+- **Examples**: Goals.test.tsx, Dashboard.test.tsx, useAuth.test.tsx
+
+#### **2. 🔗 Integration Tests (Root-Level)**
+- **Location**: `tests/` (root directory)
+- **Purpose**: Test cross-component integration, user journeys, and end-to-end flows
+- **Command**: `cd client && npm test -- ../tests/`
+- **Coverage Target**: 100% of user workflows
+- **Examples**: goals-user-journeys.test.ts, features.test.ts
+
+#### **3. ⚙️ Backend Tests (Server-Level)**
+- **Location**: `server/tests/`
+- **Purpose**: Test backend services, API endpoints, and business logic
+- **Command**: `cd server && python -m pytest tests/`
+- **Coverage Target**: 100% of backend functionality
+
 ### **Feature Testing Rules**
 - ✅ **Every new feature MUST have functional tests** that mimic real-life user behavior
 - ✅ **Test data flow between frontend and backend** for all API interactions
@@ -107,6 +130,62 @@
 - **Edge Cases**: Cover error conditions, invalid inputs, network failures
 - **Performance**: Test response times, memory usage, scalability
 - **Accessibility**: Test keyboard navigation, screen readers, mobile responsiveness
+
+### **Running All Tests**
+```bash
+# 🚀 Run ALL tests (recommended workflow)
+./utils/scripts/run-tests.sh
+
+# 🧩 Run only component tests
+cd client && npm test
+
+# 🔗 Run only integration tests  
+cd client && npm test -- ../tests/
+
+# ⚙️ Run only backend tests
+cd server && python -m pytest tests/
+
+# 📊 Run tests with coverage
+cd client && npm run test:coverage
+```
+
+### **Test Execution Order**
+1. **Backend Tests** - Validate server functionality
+2. **Component Tests** - Validate individual UI components  
+3. **Integration Tests** - Validate cross-component workflows
+4. **All tests must pass** before starting development servers
+
+### **Test Organization Diagram**
+```
+progress_tracker/
+├── 🧩 client/src/**/__tests__/     # Component Tests
+│   ├── pages/__tests__/
+│   │   ├── Goals.test.tsx          # Goals page component
+│   │   ├── Dashboard.test.tsx      # Dashboard page component
+│   │   └── Analytics.test.tsx      # Analytics page component
+│   ├── components/__tests__/
+│   │   ├── Layout.test.tsx         # Layout component
+│   │   └── ui/__tests__/           # UI component tests
+│   └── hooks/__tests__/
+│       └── useAuth.test.tsx        # Authentication hook
+├── 🔗 tests/                       # Integration Tests (Root)
+│   ├── functional/                 # User workflow tests
+│   │   ├── goals-user-journeys.test.ts
+│   │   ├── user-journeys.test.ts
+│   │   └── basic-integration.test.ts
+│   └── regression/                 # Regression tests
+│       └── features.test.ts
+└── ⚙️ server/tests/                # Backend Tests
+    ├── test_goals.py               # Goal service tests
+    ├── unit/                       # Unit tests
+    └── integration/                # Backend integration tests
+```
+
+### **Test Relationship**
+- **Component Tests** → Test individual pieces in isolation
+- **Integration Tests** → Test how components work together
+- **Backend Tests** → Test server-side functionality
+- **All Together** → Ensure complete system works correctly
 
 ## 🧩 **MODULARIZATION GUIDELINES**
 

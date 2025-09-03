@@ -96,18 +96,33 @@ run_frontend_tests() {
 
 # Function to run integration tests
 run_integration_tests() {
-    print_status "🧪 Integration tests temporarily disabled..."
-    print_warning "Integration tests need path resolution fix - skipping for now"
-    # TODO: Fix integration test path resolution
-    # if [ -f "tests/functional/basic-integration.test.ts" ]; then
-    #     print_status "Running functional integration tests..."
-    #     cd client
-    #     npm test -- ../tests/functional/ --run --reporter=verbose
-    #     print_success "Integration tests passed"
-    #     cd ..
-    # else
-    #     print_warning "No integration tests found, skipping..."
-    # fi
+    print_status "🧪 Running integration tests..."
+    
+    if [ -f "tests/functional/basic-integration.test.ts" ]; then
+        print_status "Running functional integration tests..."
+        cd client
+        npm test -- ../tests/functional/ --run --reporter=verbose
+        if [ $? -eq 0 ]; then
+            print_success "Functional integration tests passed"
+        else
+            print_error "Functional integration tests failed"
+            exit 1
+        fi
+        
+        print_status "Running regression tests..."
+        npm test -- ../tests/regression/ --run --reporter=verbose
+        if [ $? -eq 0 ]; then
+            print_success "Regression tests passed"
+        else
+            print_error "Regression tests failed"
+            exit 1
+        fi
+        
+        cd ..
+        print_success "All integration tests passed"
+    else
+        print_warning "No integration tests found, skipping..."
+    fi
 }
 
 # Function to display test summary
@@ -116,8 +131,13 @@ display_test_summary() {
     echo ""
     echo -e "${GREEN}📊 Test Summary:${NC}"
     echo -e "✅ Backend tests: PASSED"
-    echo -e "✅ Frontend tests: PASSED"
+    echo -e "✅ Frontend component tests: PASSED"
     echo -e "✅ Integration tests: PASSED"
+    echo ""
+    echo -e "${GREEN}🧪 Test Coverage:${NC}"
+    echo -e "🧩 Component Tests: client/src/**/__tests__/"
+    echo -e "🔗 Integration Tests: tests/ (root directory)"
+    echo -e "⚙️ Backend Tests: server/tests/"
     echo ""
     echo -e "${YELLOW}🚀 To start development servers, run:${NC}"
     echo -e "  ${GREEN}./utils/scripts/test-and-start.sh${NC}"
