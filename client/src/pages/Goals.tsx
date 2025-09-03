@@ -39,7 +39,7 @@ const Goals: React.FC = () => {
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(true);
   const { toasts, removeToast, showSuccess, showError, showWarning } = useToast();
   const { isAuthenticated } = useAuth();
-  const { canExtractGoals, extractionCount, maxExtractions, incrementExtractionCount } = useGuestMode();
+  const { canExtractGoals, canSaveGoals, canTrackProgress, canManageGoals, getTrialTimeRemainingFormatted } = useGuestMode();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -88,8 +88,8 @@ const Goals: React.FC = () => {
 
   const handleTextExtract = async (text: string) => {
     // Skip guest mode restrictions for authenticated users
-    if (!isAuthenticated && !canExtractGoals) {
-      showWarning('Guest Mode Limit Reached', 'You\'ve reached the limit for goal extraction in guest mode. Sign in to continue extracting goals and save your progress.');
+    if (!isAuthenticated && !canSaveGoals) {
+      showWarning('Guest Mode - Trial Expired', 'Your trial period has expired. Sign in to save goals and track your progress permanently.');
       return;
     }
 
@@ -114,7 +114,7 @@ const Goals: React.FC = () => {
           setShouldCompleteLoader(false);
           // Only increment guest mode count for guest users
           if (!isAuthenticated) {
-            incrementExtractionCount();
+            // incrementExtractionCount(); // This line is removed as per the new guest mode system
           }
           setTimeout(() => { scrollToExtractedGoals(); }, 100);
         }, 800);
@@ -134,8 +134,8 @@ const Goals: React.FC = () => {
 
   const handleFileExtract = async (file: File) => {
     // Skip guest mode restrictions for authenticated users
-    if (!isAuthenticated && !canExtractGoals) {
-      showWarning('Guest Mode Limit Reached', 'You\'ve reached the limit for goal extraction in guest mode. Sign in to continue extracting goals and save your progress.');
+    if (!isAuthenticated && !canSaveGoals) {
+      showWarning('Guest Mode - Trial Expired', 'Your trial period has expired. Sign in to save goals and track your progress permanently.');
       return;
     }
 
@@ -162,7 +162,7 @@ const Goals: React.FC = () => {
           setShouldCompleteLoader(false);
           // Only increment guest mode count for guest users
           if (!isAuthenticated) {
-            incrementExtractionCount();
+            // incrementExtractionCount(); // This line is removed as per the new guest mode system
           }
           setTimeout(() => { scrollToExtractedGoals(); }, 100);
         }, 800);
@@ -189,8 +189,8 @@ const Goals: React.FC = () => {
     console.log('handleCreateGoal called with goal:', goal);
     console.log('Current authentication state:', { isAuthenticated });
     
-    if (!isAuthenticated) {
-      showWarning('Guest Mode', 'You need to sign in to save goals and track your progress.');
+    if (!isAuthenticated && !canSaveGoals) {
+      showWarning('Guest Mode - Trial Expired', 'Your trial period has expired. Sign in to save goals and track your progress permanently.');
       return;
     }
 
@@ -247,7 +247,7 @@ const Goals: React.FC = () => {
 
   const handleDeleteGoal = async (goalId: string) => {
     if (!isAuthenticated) {
-      showWarning('Guest Mode', 'You need to sign in to manage goals.');
+      showWarning('Guest Mode - Feature Locked', 'Sign in to unlock goal management features.');
       return;
     }
 
@@ -271,7 +271,7 @@ const Goals: React.FC = () => {
 
   const handleCompleteGoal = async (goalId: string) => {
     if (!isAuthenticated) {
-      showWarning('Guest Mode', 'You need to sign in to manage goals.');
+      showWarning('Guest Mode - Feature Locked', 'Sign in to unlock goal management features.');
       return;
     }
 
@@ -295,7 +295,7 @@ const Goals: React.FC = () => {
 
   const handleRecoverGoal = async (goalId: string) => {
     if (!isAuthenticated) {
-      showWarning('Guest Mode', 'You need to sign in to manage goals.');
+      showWarning('Guest Mode - Feature Locked', 'Sign in to unlock goal management features.');
       return;
     }
 
@@ -333,29 +333,37 @@ const Goals: React.FC = () => {
       <div className="max-w-6xl mx-auto p-6 space-y-8">
         {/* Guest Mode Banner - Only show for guest users */}
         {!isAuthenticated && (
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                 <div>
-                  <h3 className="text-sm font-medium text-yellow-800">Guest Mode</h3>
-                  <p className="text-xs text-yellow-700">
-                    You can extract goals {extractionCount}/{maxExtractions} times. 
-                    {extractionCount >= maxExtractions && ' Sign in to continue extracting goals and save your progress.'}
-                  </p>
+                  <h3 className="text-sm font-medium text-blue-800">Guest Mode - Explore Clarity</h3>
+                  <div className="text-xs text-blue-700 space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                      <span>✅ Extract unlimited goals</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                      <span>⏰ Trial: {getTrialTimeRemainingFormatted()}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+                      <span>❌ Cannot save permanently</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              {extractionCount >= maxExtractions && (
-                <div className="flex items-center space-x-3">
-                  <span className="text-xs text-yellow-600">Ready to unlock unlimited access?</span>
-                  <button
-                    onClick={() => window.location.href = '/auth'}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
-                  >
-                    Sign In with Google
-                  </button>
-                </div>
-              )}
+              <div className="flex flex-col items-end space-y-2">
+                <span className="text-xs text-blue-600">Ready to unlock full features?</span>
+                <button
+                  onClick={() => window.location.href = '/auth'}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-700 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-800 transition-all duration-200 transform hover:scale-105"
+                >
+                  Sign In with Google
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -389,7 +397,7 @@ const Goals: React.FC = () => {
           onFileExtract={handleFileExtract}
           isLoading={isExtracting}
           shouldComplete={shouldCompleteLoader}
-          disabled={!isAuthenticated && !canExtractGoals}
+          disabled={false}
         />
 
         {showExtractedGoals && (

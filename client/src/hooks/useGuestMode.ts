@@ -3,53 +3,104 @@ import { useState, useEffect } from 'react'
 interface GuestModeState {
   isGuest: boolean
   canExtractGoals: boolean
-  extractionCount: number
-  maxExtractions: number
+  canSaveGoals: boolean
+  canTrackProgress: boolean
+  canManageGoals: boolean
+  trialStartTime: number | null
+  trialDuration: number // 24 hours in milliseconds
 }
 
 export function useGuestMode() {
   const [guestState, setGuestState] = useState<GuestModeState>({
     isGuest: true,
-    canExtractGoals: true,
-    extractionCount: 0,
-    maxExtractions: 1
+    canExtractGoals: true, // Unlimited extractions
+    canSaveGoals: false,   // Cannot save permanently
+    canTrackProgress: false, // Cannot track progress
+    canManageGoals: false,   // Cannot manage goals
+    trialStartTime: null,
+    trialDuration: 24 * 60 * 60 * 1000 // 24 hours
   })
 
   useEffect(() => {
-    // Check if user has already extracted goals in this session
-    const storedCount = localStorage.getItem('guest_extraction_count')
-    const count = storedCount ? parseInt(storedCount, 10) : 0
+    // Check if user has already started a trial session
+    const storedTrialStart = localStorage.getItem('guest_trial_start')
+    const trialStart = storedTrialStart ? parseInt(storedTrialStart, 10) : null
     
-    setGuestState(prev => ({
-      ...prev,
-      extractionCount: count,
-      canExtractGoals: count < prev.maxExtractions
-    }))
+    if (!trialStart) {
+      // Start new trial
+      const now = Date.now()
+      localStorage.setItem('guest_trial_start', now.toString())
+      setGuestState(prev => ({
+        ...prev,
+        trialStartTime: now
+      }))
+    } else {
+      // Check if trial is still valid
+      const now = Date.now()
+      const trialEndTime = trialStart + guestState.trialDuration
+      const isTrialExpired = now > trialEndTime
+      
+      if (isTrialExpired) {
+        // Trial expired, reset to basic guest mode
+        localStorage.removeItem('guest_trial_start')
+        setGuestState(prev => ({
+          ...prev,
+          trialStartTime: null,
+          canSaveGoals: false,
+          canTrackProgress: false,
+          canManageGoals: false
+        }))
+      } else {
+        // Trial still active
+        setGuestState(prev => ({
+          ...prev,
+          trialStartTime: trialStart,
+          canSaveGoals: true,
+          canTrackProgress: true,
+          canManageGoals: true
+        }))
+      }
+    }
   }, [])
 
-  const incrementExtractionCount = () => {
-    const newCount = guestState.extractionCount + 1
-    localStorage.setItem('guest_extraction_count', newCount.toString())
+  const getTrialTimeRemaining = () => {
+    if (!guestState.trialStartTime) return 0
     
-    setGuestState(prev => ({
-      ...prev,
-      extractionCount: newCount,
-      canExtractGoals: newCount < prev.maxExtractions
-    }))
+    const now = Date.now()
+    const trialEndTime = guestState.trialStartTime + guestState.trialDuration
+    const remaining = trialEndTime - now
+    
+    return Math.max(0, remaining)
+  }
+
+  const getTrialTimeRemainingFormatted = () => {
+    const remaining = getTrialTimeRemaining()
+    if (remaining === 0) return 'Expired'
+    
+    const hours = Math.floor(remaining / (1000 * 60 * 60))
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m remaining`
+    }
+    return `${minutes}m remaining`
   }
 
   const resetGuestMode = () => {
-    localStorage.removeItem('guest_extraction_count')
+    localStorage.removeItem('guest_trial_start')
     setGuestState(prev => ({
       ...prev,
-      extractionCount: 0,
-      canExtractGoals: true
+      trialStartTime: null,
+      canSaveGoals: false,
+      canTrackProgress: false,
+      canManageGoals: false
     }))
   }
 
   return {
     ...guestState,
-    incrementExtractionCount,
+    getTrialTimeRemaining,
+    getTrialTimeRemainingFormatted,
     resetGuestMode
   }
 }
